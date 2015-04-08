@@ -41,20 +41,22 @@ class FileEncryptUI extends JFrame implements ActionListener{
 					btnDecRun,			//run decryption
 					btnExit,
                                         btnSend;
+	private JTextArea output;
 	private JTabbedPane tab;
 	private JPanel pnlEnc,				//main encryption panel
 				   pnlDec,				//main decryption panel
 				   pnlEncRow1,
 				   pnlDecRow1,
 				   pnlDecRow2,
+				   pnlDecText,
 				   pnlAbt,
 	               pnlHlp,
-                       pnlSend;
+                       pnlSend,
+                       pnlOutput;
                        	private AES AES;					//AES object
-	private String strAbout[] = {"Author: Renu,Kanishak (13/3/11)",
-								 "Email: abc@gmail.com",
-								 "Reference: http://www.abc.com./",
-								 "program/java,3902462"};
+	private String strAbout[] = {"Author: ",
+								 "Email: ",
+								 "Reference: "};
 
 	private String strHelp[] = {"This software is based on the AES",
 								 "Reference: http://www.abc.com/",
@@ -99,6 +101,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		// decryption panel
 		txtDecFile = new JTextField("",30);
 		txtDecKey = new JTextField("",30);
+		output = new JTextArea(2,3);
 		
 		btnDecBrw = new JButton("...");
 		btnDecBrw.addActionListener(this);
@@ -125,12 +128,20 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		pnlDecRow2.add(txtDecKey,"Center");
 		pnlDecRow2.add(btnKeyBrw,"East");
 		
+		pnlDecText = new JPanel(new BorderLayout());
+		pnlDecText.setPreferredSize(new Dimension(300,300));
+		pnlDecText.setBackground(new Color(0,0,0,0));
+		pnlDecText.add(new JLabel("Decrypted Output: "),"South");
+		pnlDecText.add(output,"Center");
+		//pnlDecText.add(btnKeyBrw,"East");
+		
 		pnlDec = new JPanel(new FlowLayout());		
 		pnlDec.setBackground(new Color(0,0,0,0));
 		pnlDec.add(new JLabel("Select file to decrypt and decryption key"));
 		pnlDec.add(pnlDecRow1);
 		pnlDec.add(pnlDecRow2);
 		pnlDec.add(btnDecRun);
+		pnlDec.add(pnlDecText);
 		
 		//about panel
 		pnlAbt = new JPanel(new FlowLayout());
@@ -166,11 +177,11 @@ class FileEncryptUI extends JFrame implements ActionListener{
               //  tab.add("Send",pnlSend);
 		
 		//main frame
-		setSize(360,160);
+		setSize(360,600);
 		setLocation(100,100);
 		getContentPane().add(tab,"Center");
 		
-		setTitle("AES File Encryption/Decryption");		
+		setTitle("AREA 51 - Secure File System");		
 		setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		setResizable(false);		
 	}
@@ -232,7 +243,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 			}			
 		}
 
-		//perform encryption
+		//perform decryption
 		if (btn == btnDecRun){			
 			File file = new File(txtDecFile.getText());
 			File keyFile = new File(txtDecKey.getText());
@@ -259,13 +270,15 @@ class FileEncryptUI extends JFrame implements ActionListener{
 
 			//restore original file and remove encrypted file and key
 			String filename = file.getAbsolutePath().
-				substring(0,file.getAbsolutePath().length()-3);
+				substring(0,file.getAbsolutePath().length()-4);
 			if (writeByteFile(filename,data)){
 				file.delete();
 				keyFile.delete();
 				JOptionPane.showMessageDialog(null,
 					"File sucessfully decrypted.",
-					"Done",JOptionPane.INFORMATION_MESSAGE);				
+					"Done",JOptionPane.INFORMATION_MESSAGE);
+				output.append(new String(filename + "\n" + "\n"));
+				output.append(new String(data));
 			}			
 			
 		}
@@ -417,5 +430,5 @@ class FileEncryptUI extends JFrame implements ActionListener{
 				"Error",JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-	}	
+	}
 }
