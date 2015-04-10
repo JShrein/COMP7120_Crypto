@@ -41,6 +41,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 					btnDecRun,			//run decryption
 					btnExit,
                                         btnSend;
+	private JScrollPane outputScrollPane;
 	private JTextArea output;
 	private JTabbedPane tab;
 	private JPanel pnlEnc,				//main encryption panel
@@ -102,6 +103,8 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		txtDecFile = new JTextField("",30);
 		txtDecKey = new JTextField("",30);
 		output = new JTextArea(2,3);
+		outputScrollPane = new JScrollPane(output);
+		outputScrollPane.setPreferredSize(new Dimension(300, 300));
 		
 		btnDecBrw = new JButton("...");
 		btnDecBrw.addActionListener(this);
@@ -131,8 +134,9 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		pnlDecText = new JPanel(new BorderLayout());
 		pnlDecText.setPreferredSize(new Dimension(300,300));
 		pnlDecText.setBackground(new Color(0,0,0,0));
-		pnlDecText.add(new JLabel("Decrypted Output: "),"South");
-		pnlDecText.add(output,"Center");
+		pnlDecText.add(new JLabel("Decrypted Output: "),"North");
+		//pnlDecText.add(output,"Center");
+		pnlDecText.add(outputScrollPane, "Center");
 		//pnlDecText.add(btnKeyBrw,"East");
 		
 		pnlDec = new JPanel(new FlowLayout());		
@@ -278,7 +282,10 @@ class FileEncryptUI extends JFrame implements ActionListener{
 					"File sucessfully decrypted.",
 					"Done",JOptionPane.INFORMATION_MESSAGE);
 				output.append(new String(filename + "\n" + "\n"));
-				output.append(new String(data));
+				for(int i = 0; i < data.length; i += 45)
+				{
+					output.append(new String(data).substring(i, i + 45) + "\n");
+				}
 			}			
 			
 		}
