@@ -282,9 +282,23 @@ class FileEncryptUI extends JFrame implements ActionListener{
 					"File sucessfully decrypted.",
 					"Done",JOptionPane.INFORMATION_MESSAGE);
 				output.append(new String(filename + "\n" + "\n"));
-				for(int i = 0; i < data.length; i += 45)
+				//for(int i = 0; i < data.length; i += 45)
+				//{
+					//output.append(new String(data).substring(i, i + 45) + "\n");
+				//}
+				int linePos = 0;
+				for(int i = 0; i < data.length; i++)
 				{
-					output.append(new String(data).substring(i, i + 45) + "\n");
+					if(linePos >= 50 && data[i] == 0x20)
+					{
+						output.append("\n");
+						linePos = 0;
+					}
+					else
+					{
+						output.append((char)data[i] + "");
+						linePos++;
+					}
 				}
 			}			
 			
