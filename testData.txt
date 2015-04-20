@@ -1,1 +1,0 @@
-Here is a text file with at least a few lines worth of text for testing the word wrapping functionality of the text area.  It should wrap at least 3 or 4 times maybe I hope please.
