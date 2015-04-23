@@ -37,10 +37,8 @@ public class TestAES{
 class FileEncryptUI extends JFrame implements ActionListener{
 
 	//declare form UI controls
-	private JTextField //txtEncFile,		//encrypt source file
-					   //txtDecFile,		//decrypt source file
-					   //txtDecKey,
-					   txtCheck;		//decrypt source key
+	private JTextField txtCheck;		//decrypt source key
+	
 	private JButton //btnEncBrw,			//browse encrypt source file
 					//btnDecBrw,			//browse decrypt source file
 					//btnKeyBrw,			//browse encrypt source key
@@ -109,8 +107,8 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		
 		// encryption panel		
 		//txtEncFile = new JTextField("",30);
-		txtCheck = new JTextField("You can search for a file here",30);
-		txtCheck.addFocusListener(new FocusListener() {
+		txtCheck = new JTextField("",30);
+		/*txtCheck.addFocusListener(new FocusListener() {
 
 			@Override
 			public void focusGained(FocusEvent e) {
@@ -121,8 +119,9 @@ class FileEncryptUI extends JFrame implements ActionListener{
 			public void focusLost(FocusEvent e) {
 				txtCheck.setText("You can search for a file here");
 				
-			}});
-
+			}
+		});
+*/
 		
 		btnExit = new JButton("Logout");
 		btnExit.setPreferredSize(new Dimension(80,20));
@@ -162,9 +161,6 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		pnlEncRow1 = new JPanel(new BorderLayout());
 		pnlEncRow1.setPreferredSize(new Dimension(300,20));
 		pnlEncRow1.setBackground(new Color(0,0,0,0));
-		//pnlEncRow1.add(new JLabel("File: "),"West");
-		//pnlEncRow1.add(txtEncFile,"Center");
-		//pnlEncRow1.add(btnEncBrw,"East");
 				
 		pnlCheck = new JPanel(new BorderLayout());
 		pnlCheck.setPreferredSize(new Dimension(300,25));
@@ -197,58 +193,6 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		pnlEnc.add(btnExit);
 		pnlEnc.add(pnlListText);
 		pnlEnc.add(pnlCheck);
-
-		
-
-		// decryption panel
-		/*
-		txtDecFile = new JTextField("",30);
-		txtDecKey = new JTextField("",30);
-		output = new JTextArea(2,3);
-		outputScrollPane = new JScrollPane(output);
-		outputScrollPane.setPreferredSize(new Dimension(300, 300));
-		
-		btnDecBrw = new JButton("...");
-		btnDecBrw.addActionListener(this);
-				
-		btnKeyBrw = new JButton("...");
-		btnKeyBrw.addActionListener(this);
-		
-		btnDecRun = new JButton("Display");
-		btnDecRun.setPreferredSize(new Dimension(80,20));
-		btnDecRun.addActionListener(this);
-		btnDecRun.setMnemonic(KeyEvent.VK_D);
-		
-		pnlDecRow1 = new JPanel(new BorderLayout());
-		pnlDecRow1.setPreferredSize(new Dimension(300,20));
-		pnlDecRow1.setBackground(new Color(0,0,0,0));
-		pnlDecRow1.add(new JLabel("File: "),"West");
-		pnlDecRow1.add(txtDecFile,"Center");
-		pnlDecRow1.add(btnDecBrw,"East");
-
-		pnlDecRow2 = new JPanel(new BorderLayout());
-		pnlDecRow2.setPreferredSize(new Dimension(300,20));
-		pnlDecRow2.setBackground(new Color(0,0,0,0));
-		pnlDecRow2.add(new JLabel("Key: "),"West");
-		pnlDecRow2.add(txtDecKey,"Center");
-		pnlDecRow2.add(btnKeyBrw,"East");
-		
-		pnlDecText = new JPanel(new BorderLayout());
-		pnlDecText.setPreferredSize(new Dimension(300,300));
-		pnlDecText.setBackground(new Color(0,0,0,0));
-		pnlDecText.add(new JLabel("Decrypted Output: "),"North");
-		//pnlDecText.add(output,"Center");
-		pnlDecText.add(outputScrollPane, "Center");
-		//pnlDecText.add(btnKeyBrw,"East");
-		
-		pnlDec = new JPanel(new FlowLayout());		
-		pnlDec.setBackground(new Color(0,0,0,0));
-		pnlDec.add(new JLabel("Select file to decrypt and decryption key"));
-		pnlDec.add(pnlDecRow1);
-		pnlDec.add(pnlDecRow2);
-		pnlDec.add(btnDecRun);
-		pnlDec.add(pnlDecText);
-		*/
 		
 		//about panel
 		pnlAbt = new JPanel(new FlowLayout());
@@ -333,7 +277,9 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		setTitle("AREA 51 - Secure File System");		
 		setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		setResizable(false);		
+		
 	}
+	
 	
 	/**
 	 *	Starts FileEncryptUI
@@ -495,7 +441,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(null,
 					"File sucessfully decrypted.",
 					"Done",JOptionPane.INFORMATION_MESSAGE);
-				list.append(new String(filename + "\n" + "\n"));
+				list.append(new String(encFile.getName() + " file contents: " + "\n" + "\n"));
 				//for(int i = 0; i < data.length; i += 45)
 				//{
 					//output.append(new String(data).substring(i, i + 45) + "\n");
