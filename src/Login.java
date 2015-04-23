@@ -119,8 +119,8 @@ class LoginUI extends JFrame {
 		loginPanel.add(loginPanelUser);
 		loginPanel.add(loginPanelPassword);
 		loginPanel.add(loginButton);
-		loginPanel.add(loginExit);
-		loginPanel.add(loadSystem);
+		//loginPanel.add(loginExit);
+		//loginPanel.add(loadSystem);
 		
 		registerPanelUser = new JPanel(new BorderLayout());
 		registerPanelUser.setPreferredSize(new Dimension(300, 20));
@@ -150,7 +150,7 @@ class LoginUI extends JFrame {
 		mainTab = new JTabbedPane();
 		mainTab.setSize(350, 150);
 		mainTab.add("Login", loginPanel);
-		mainTab.add("Register", registerPanel);
+		//mainTab.add("Register", registerPanel);
 		mainTab.add("About", aboutPanel);
 		
 		// Add main tab to JFrame
@@ -217,6 +217,7 @@ class LoginUI extends JFrame {
 						isAdmin = true;
 					}
 					
+					hideWindow();
 				}
 				else
 				{
@@ -279,6 +280,8 @@ class LoginUI extends JFrame {
 		    	else
 		    	{
 		    		JOptionPane.showMessageDialog(null, "ERROR: Only Administrator can create accounts!");
+		    		registerUusernameText.setText("");
+		    		registerPasswordText.setText("");
 		    	}
 		    }
 		});
@@ -324,7 +327,11 @@ class LoginUI extends JFrame {
 	public void hideWindow()
 	{
 		this.setVisible(false);
-		TestAES obj = new TestAES();
-		new FileEncryptUI(currentUser).start(); 
+		try {
+			new FileEncryptUI(currentUser).start(); 
+		} catch (NoSuchAlgorithmException a) {
+			System.out.println("ERROR: NoSuchAlgorithmException.");
+			a.printStackTrace();
+		}
 	}
 }

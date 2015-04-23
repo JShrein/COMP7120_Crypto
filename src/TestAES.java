@@ -10,19 +10,21 @@
  * @author renu
  */
 import java.io.*;
-import java.nio.file.Path;
+import java.nio.file.Files;
+//import java.nio.file.StandardCopyOption;
+import java.security.*;
+//import java.nio.file.Path;
 import java.awt.*;
 import java.util.*;
 import java.awt.event.*;
 
 import javax.swing.*;
-import javax.swing.event.*;
 
 import java.security.Key;
 
 public class TestAES{
 	
-	public static void main(String args[]){
+	public static void main(String args[]) throws IOException, NoSuchAlgorithmException{
 		new FileEncryptUI("default").start();
 	}	
 }
@@ -35,17 +37,20 @@ public class TestAES{
 class FileEncryptUI extends JFrame implements ActionListener{
 
 	//declare form UI controls
-	private JTextField txtEncFile,		//encrypt source file
+	private JTextField //txtEncFile,		//encrypt source file
 					   txtDecFile,		//decrypt source file
 					   txtDecKey;		//decrypt source key
-	private JButton btnEncBrw,			//browse encrypt source file
+	private JButton //btnEncBrw,			//browse encrypt source file
 					btnDecBrw,			//browse decrypt source file
 					btnKeyBrw,			//browse encrypt source key
-					btnEncRun,			//run encryption
+					btnAdd,			//run encryption
+					btnDisplay,
 					btnDecRun,			//run decryption
 					btnExit,
-                    btnSend,
-					btnList;			// List all files in user's folder
+                    //btnSend,
+                    btnDelete,
+					btnList,
+					btnReg;			// List all files in user's folder
 	private JScrollPane outputScrollPane;
 	private JScrollPane listScrollPane;
 	private JTextArea output;
@@ -60,11 +65,14 @@ class FileEncryptUI extends JFrame implements ActionListener{
 				   pnlListText,
 				   pnlAbt,
 	               pnlHlp,
-                   pnlSend;
+	           	   pnlReg,
+	           	   pnlRegUser,
+	           	   pnlRegPassword;
+                   //pnlSend;
                        	private AES AES;					//AES object
-	private String strAbout[] = {"Author: ",
-								 "Email: ",
-								 "Reference: "};
+	private String strAbout[] = {"Authors: ", "Marc Badrian, Mohammad Shamim, and John Shrein",
+								 "Email: ", "area51@cryptoproject.com", "Reference: COMP7120 Project", 
+								 "Area 51 Secure Filesystem Manager"};
 
 	private String strHelp[] = {"This software is based on the AES",
 								 "Reference: http://www.abc.com/",
@@ -73,29 +81,59 @@ class FileEncryptUI extends JFrame implements ActionListener{
 	private String userName;
 	private String userPath;
 	
+	JFrame windowRef = this;
+	
+	// Create swing components required for this JFrame
+	JLabel regUsernameLabel;
+	JLabel regPasswordLabel;
+	JLabel regPrompt;
+	
+	JTextField registerUsernameText;
+	JPasswordField registerPasswordText;
+
+	MessageDigest digest;
+
+	boolean isAdmin = false;
+	boolean isValidUser = false;
+	String currentUser;
 	
 	/**
 	 *	Default constructor to launch program
 	 */
-	public FileEncryptUI(String user){
+	public FileEncryptUI(String user) throws NoSuchAlgorithmException{
 		
 		AES = new AES();
 		
 		// encryption panel		
-		txtEncFile = new JTextField("",30);
+		//txtEncFile = new JTextField("",30);
 		
-		btnExit = new JButton("Exit");
+		btnExit = new JButton("Logout");
 		btnExit.setPreferredSize(new Dimension(80,20));
 		btnExit.addActionListener(this);
 		btnExit.setMnemonic(KeyEvent.VK_X);
 		
-		btnEncBrw = new JButton("...");
-		btnEncBrw.addActionListener(this);
+		//btnEncBrw = new JButton("...");
+		//btnEncBrw.addActionListener(this);
 		
-		btnEncRun = new JButton("Encrypt");
-		btnEncRun.setPreferredSize(new Dimension(80,20));
-		btnEncRun.addActionListener(this);
-		btnEncRun.setMnemonic(KeyEvent.VK_E);
+		btnReg = new JButton("Register");
+		btnReg.setPreferredSize(new Dimension(80,20));
+		btnReg.addActionListener(this);
+		btnReg.setMnemonic(KeyEvent.VK_E);
+		
+		btnAdd = new JButton("Add");
+		btnAdd.setPreferredSize(new Dimension(80,20));
+		btnAdd.addActionListener(this);
+		btnAdd.setMnemonic(KeyEvent.VK_E);
+		
+		btnDisplay = new JButton("Display");
+		btnDisplay.setPreferredSize(new Dimension(80,20));
+		btnDisplay.addActionListener(this);
+		btnDisplay.setMnemonic(KeyEvent.VK_D);
+		
+		btnDelete = new JButton("Delete");
+		btnDelete.setPreferredSize(new Dimension(80,20));
+		btnDelete.addActionListener(this);
+		btnDelete.setMnemonic(KeyEvent.VK_E);
 		
 		btnList = new JButton("List");
 		btnList.setPreferredSize(new Dimension(80,20));
@@ -105,27 +143,30 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		pnlEncRow1 = new JPanel(new BorderLayout());
 		pnlEncRow1.setPreferredSize(new Dimension(300,20));
 		pnlEncRow1.setBackground(new Color(0,0,0,0));
-		pnlEncRow1.add(new JLabel("File: "),"West");
-		pnlEncRow1.add(txtEncFile,"Center");
-		pnlEncRow1.add(btnEncBrw,"East");
+		//pnlEncRow1.add(new JLabel("File: "),"West");
+		//pnlEncRow1.add(txtEncFile,"Center");
+		//pnlEncRow1.add(btnEncBrw,"East");
 		
 		// File list panel
 		list = new JTextArea(2,3);
+		list.setEditable(false);
 		listScrollPane = new JScrollPane(list);
 		listScrollPane.setPreferredSize(new Dimension(300, 300));
 		
 		pnlListText = new JPanel(new BorderLayout());
 		pnlListText.setPreferredSize(new Dimension(300,300));
 		pnlListText.setBackground(new Color(0,0,0,0));
-		pnlListText.add(new JLabel("File List Output: "),"North");
+		pnlListText.add(new JLabel("Output: "),"North");
 		pnlListText.add(listScrollPane, "Center");
 		
 		pnlEnc = new JPanel(new FlowLayout());		
 		pnlEnc.setBackground(new Color(0,0,0,0));
-		pnlEnc.add(new JLabel("Select a file to be encrypted"));
+		pnlEnc.add(new JLabel("Welcome to AREA 51."));
 		pnlEnc.add(pnlEncRow1);
-		pnlEnc.add(btnEncRun);
+		pnlEnc.add(btnAdd);
 		pnlEnc.add(btnList);
+		pnlEnc.add(btnDisplay);
+		pnlEnc.add(btnDelete);
 		pnlEnc.add(btnExit);
 		pnlEnc.add(pnlListText);
 		
@@ -143,7 +184,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		btnKeyBrw = new JButton("...");
 		btnKeyBrw.addActionListener(this);
 		
-		btnDecRun = new JButton("Decrypt");
+		btnDecRun = new JButton("Display");
 		btnDecRun.setPreferredSize(new Dimension(80,20));
 		btnDecRun.addActionListener(this);
 		btnDecRun.setMnemonic(KeyEvent.VK_D);
@@ -184,12 +225,45 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		for (int i=0; i<strAbout.length; i++)
 			pnlAbt.add(new JLabel(strAbout[i]));
 		
+		// Setup components
+		regPrompt = new JLabel("Register new account");
+				
+		regUsernameLabel = new JLabel("Username");
+		regPasswordLabel = new JLabel("Password");
+		registerUsernameText = new JTextField(15);
+		registerPasswordText = new JPasswordField(15);
+		//btnReg = new JButton("Register");
+
+		
+		//register users panels
+		pnlRegUser = new JPanel(new BorderLayout());
+		pnlRegUser.setPreferredSize(new Dimension(300, 20));
+		pnlRegUser.add(regUsernameLabel, "Center");
+		pnlRegUser.add(registerUsernameText, "East");
+		
+		pnlRegPassword = new JPanel(new BorderLayout());
+		pnlRegPassword.setPreferredSize(new Dimension(300, 20));
+		pnlRegPassword.add(regPasswordLabel, "Center");
+		pnlRegPassword.add(registerPasswordText, "East");
+		
+		pnlReg = new JPanel(new FlowLayout());
+		pnlReg.setBackground(new Color(0,0,0,0));
+		pnlReg.setSize(350, 180);
+		pnlReg.add(regPrompt);
+		pnlReg.add(pnlRegUser);
+		pnlReg.add(pnlRegPassword);
+		pnlReg.add(btnReg);
+		
+		// Instantiate SHA-256 hash digest obj
+		digest = MessageDigest.getInstance("SHA-256");
+		
 		//help panel
 		pnlHlp = new JPanel(new FlowLayout());
 		pnlHlp.setBackground(new Color(0,0,0,0));
 		for (int i=0; i<strHelp.length; i++)
 			pnlHlp.add(new JLabel(strHelp[i]));
-                //Send panel
+                
+		/*//Send panel
             pnlSend = new JPanel(new FlowLayout());
             pnlSend.setPreferredSize(new Dimension(300, 20));
             pnlSend.setBackground(new Color(0, 0, 0, 0));
@@ -200,15 +274,19 @@ class FileEncryptUI extends JFrame implements ActionListener{
             btnSend.setMnemonic(KeyEvent.VK_S);
             pnlSend.add(new JLabel("For Send a file"));
             pnlSend.add(btnSend);
-
+		 */
 		
-                //main tab
+         //main tab
 		tab = new JTabbedPane();
 		tab.setPreferredSize(new Dimension(310,150));
-		tab.add("Encrypt",pnlEnc);
-		tab.add("Decrypt",pnlDec);
+		tab.add("Main",pnlEnc);
+		//tab.add("Decrypt",pnlDec);
+		if(user.equals("admin"))
+		{
+			tab.add("Register Users", pnlReg);
+		}
 		tab.add("About",pnlAbt);
-		tab.add("Help",pnlHlp);
+		//tab.add("Help",pnlHlp);
               //  tab.add("Send",pnlSend);
 		
 		// Setting user from login information
@@ -235,6 +313,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		userPath = "./users/" + userName + "/";
 		boolean success = new File(userPath).mkdirs();
 		System.out.println(success);
+		
 	}
 
 	/**
@@ -245,56 +324,210 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		JButton btn = (JButton)e.getSource();
 		
 		//browse for source file
-		if (btn == btnEncBrw){
-			File file = getFileDialogOpen("*.*");
-			if (file==null)	return;
-			txtEncFile.setText(file.getAbsolutePath());
-		}
+		//if (btn == btnEncBrw){
+		//	File file = getFileDialogOpen("*.*", userName);
+		//	if (file==null)	return;
+			//txtEncFile.setText(file.getAbsolutePath());
+		//}
 
 		//browse for encrypted files
 		if (btn == btnDecBrw){
-			File file = getFileDialogOpen("*.enc");
+			File file = getFileDialogOpen("*.enc", userName);
 			if (file==null)	return;
 			txtDecFile.setText(file.getAbsolutePath());
 		}
 
 		//browse for encryption key
 		if (btn == btnKeyBrw){
-			File file = getFileDialogOpen("*.key");
+			File file = getFileDialogOpen("*.key", userName);
 			if (file==null)	return;
 			txtDecKey.setText(file.getAbsolutePath());
 		}
 
-		//perform encryption
-		if (btn == btnEncRun){
+		//Add a file into the system. 
+		//If a file with the same file already exists in the system, give an error.
+		if (btn == btnAdd){
+			
+			//clear output text
+			list.setText(null);
+			
+			//browse for source file
+			File file = getFileDialogOpen("*.*", userName);
+			if (file==null)	return;
+			//txtEncFile.setText(file.getAbsolutePath());
 			
 			//open file and read data
-			File file = new File(txtEncFile.getText());
+			//File file = new File(txtEncFile.getText());
 			byte data[] = readByteFile(file);
 			
 			String fileName = file.getName();
 			String encryptedFilePath = userPath + fileName;
+			File dest = new File(userPath + fileName);	
+			
 			
 			//encrypt and save as new data and key as new files						
 			data = AES.encrypt(data);
-			if (writeByteFile(encryptedFilePath + ".enc",data) &&
+			if (writeByteFile(encryptedFilePath,data) &&
 				writeObjectFile(encryptedFilePath + ".key",AES.getKey())){
-				
+				/*try{
+					copyFile(file, dest);
+				} catch (IOException i) {
+					JOptionPane.showMessageDialog(null, "IOException",
+							"Error",JOptionPane.ERROR_MESSAGE);
+					}
+				*/
 				//remove old file
-				int reply = JOptionPane.showConfirmDialog(null, "Click OK to continue", "Delete source file", JOptionPane.YES_NO_OPTION);
+				/*int reply = JOptionPane.showConfirmDialog(null, "Would you like to Delete the source file? ", 
+						"Delete source file", JOptionPane.YES_NO_OPTION);
 				
 				if(reply == JOptionPane.YES_OPTION)
 				{
 					file.delete();
 				}
-				
+				*/
 				JOptionPane.showMessageDialog(null,
-					"File encrypted as: " + file.getName() + ".enc\n" +
-					"Encryption key: " + file.getName() + ".key\n",
+					//"File encrypted as: " + file.getName() + ".enc\n" +
+					//"Encryption key: " + file.getName() + ".key\n",
+					"File successfully added to the system!",	
 					"Done",JOptionPane.INFORMATION_MESSAGE);				
 			}			
 		}
 
+		// delete a file
+		if (btn == btnDelete) {
+			
+			//clear output text
+			list.setText(null);
+			
+			//browse for file
+			File file = getFileDialogOpen("*.*", userName);
+			if (file==null)	return;
+			
+			//remove file
+			int reply = JOptionPane.showConfirmDialog(null, "Are you sure you would like to permanently delete this file? ", 
+					"Delete source file", JOptionPane.YES_NO_OPTION);
+			
+			if(reply == JOptionPane.YES_OPTION)
+			{
+				file.delete();
+			}
+		}
+		
+		//if the system receives this command, it will display the content of the file 
+		//with the filename on screen. If the file does not exist, the system should give an error.
+		if (btn == btnDisplay){			
+			
+			//clear output text
+			list.setText(null);
+			
+			//browse for file
+			File file = getFileDialogOpen("*.*", userName);
+			if (file==null)	return;
+			
+			File encFile = new File((file).toString());
+			File keyFile = new File(file + ".key");
+			
+			//get encrypted file and key
+			if (!encFile.exists()){
+				JOptionPane.showMessageDialog(null,
+					"Encrypted file not found or cannot be accessed.",
+					"Error",JOptionPane.ERROR_MESSAGE);
+					return;
+			}
+
+			if (!keyFile.exists()){
+				JOptionPane.showMessageDialog(null,				
+					"Key file not found or cannot be accessed.",
+					"Error",JOptionPane.ERROR_MESSAGE);
+					return;
+			}
+			
+			//use key to decrypt data
+			byte data[] = readByteFile(encFile);
+			Key key = (Key)readObjectFile(keyFile);
+			data = AES.decrypt(data,key);
+
+			//restore original file and remove encrypted file and key
+			String filename = encFile.getAbsolutePath().
+				substring(0,encFile.getAbsolutePath().length()-4);
+			if (writeByteFile(filename,data)){
+				//encFile.delete();
+				//keyFile.delete();
+				JOptionPane.showMessageDialog(null,
+					"File sucessfully decrypted.",
+					"Done",JOptionPane.INFORMATION_MESSAGE);
+				list.append(new String(filename + "\n" + "\n"));
+				//for(int i = 0; i < data.length; i += 45)
+				//{
+					//output.append(new String(data).substring(i, i + 45) + "\n");
+				//}
+				int linePos = 0;
+				for(int i = 0; i < data.length; i++)
+				{
+					if(linePos >= 50 && data[i] == 0x20)
+					{
+						list.append("\n");
+						linePos = 0;
+					}
+					else
+					{
+						list.append((char)data[i] + "");
+						linePos++;
+					}
+				}
+			}
+		}
+		
+		// register users
+		if (btn == btnReg) 
+		{
+	    	String username = registerUsernameText.getText();
+			char[] password = registerPasswordText.getPassword();
+			
+			for(int i = 0; i < password.length; i++)
+			{
+				digest.update((byte)password[i]);
+			}
+			
+			byte[] passwordHashBytes = digest.digest();
+			String newPasswordHash = toHashString(passwordHashBytes);
+			String credentials = username + ':' + newPasswordHash + "\n";
+
+			
+			if(password.length < 8 || username.length() < 1)
+			{
+				JOptionPane.showMessageDialog(null, "ERROR: username or password is invalid");
+			}
+			else
+			{
+				// Set text fields back to blank after processing input
+				registerUsernameText.setText("");
+				registerPasswordText.setText("");
+				
+		    	try {
+					RandomAccessFile passwords = new RandomAccessFile("passwd.txt", "rw");
+					
+					passwords.seek(passwords.length());
+					passwords.writeBytes(credentials);
+					passwords.close();
+					
+					// Create user folder
+					userPath = "./users/" + username + "/";
+					boolean success = new File(userPath).mkdirs();
+					System.out.println(success);
+					
+					JOptionPane.showMessageDialog(null, "Registration Successful");
+					
+				} catch (FileNotFoundException e0) {
+					System.out.println("ERROR: File not found.");
+					e0.printStackTrace();
+				} catch (IOException e1) {
+					System.out.println("ERROR: Unable to access file");
+					e1.printStackTrace();
+				}
+			}
+    	}
+		
 		//perform decryption
 		if (btn == btnDecRun){			
 			File file = new File(txtDecFile.getText());
@@ -370,20 +603,22 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		
 		//exit
 		if (btn == btnExit){
-			System.exit(0);
+				backToLogin();
 		}
-                if(btn==btnSend)
-                {
-                    //SendMail.html;
-                }
+               // if(btn==btnSend)
+               // {
+               //     //SendMail.html;
+               // }
 	}
 	
 	/**
 	 *	Allow user to select a file using an Open Dialog and return the file
 	 *	@return A valid file that the user has selected, or null
 	 */
-	protected File getFileDialogOpen(String filter){
+	protected File getFileDialogOpen(String filter, String directory){
+		String dir = userPath;
 		FileDialog fd = new FileDialog(this,"Select File",FileDialog.LOAD);
+		fd.setDirectory(dir);
 		fd.setFile(filter);
 		fd.setVisible(true);
 
@@ -515,5 +750,37 @@ class FileEncryptUI extends JFrame implements ActionListener{
 				"Error",JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
+	}
+	
+	protected void backToLogin(){
+		try {
+		this.setVisible(false);
+		//Login obj = new Login();
+		new LoginUI("User Login and Registration", 355, 175);
+		}
+		catch(NoSuchAlgorithmException e){
+			JOptionPane.showMessageDialog(null,
+					"NoSuchAlgorithmException",
+					"Error",JOptionPane.ERROR_MESSAGE);
+			}
+	}
+	/*
+	protected void copyFile(File source, File dest)
+			throws IOException {
+		Files.copy(source.toPath(), dest.toPath());
+	}
+	*/
+	protected String toHashString(byte[] characters)
+	{
+		StringBuffer sb = new StringBuffer();
+		
+		for (int i = 0; i < characters.length; i++) {
+    		String hex = Integer.toHexString(0xff & characters[i]);
+   	     	if(hex.length() == 1) 
+   	     		sb.append('0');
+   	     	sb.append(hex);
+    	}
+		
+		return sb.toString();
 	}
 }
