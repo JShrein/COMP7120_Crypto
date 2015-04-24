@@ -107,8 +107,9 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		
 		// encryption panel		
 		//txtEncFile = new JTextField("",30);
-		txtCheck = new JTextField("",30);
-		/*txtCheck.addFocusListener(new FocusListener() {
+		txtCheck = new JTextField("You can search for a file here",30);
+		txtCheck.setForeground(Color.gray);
+		txtCheck.addFocusListener(new FocusListener() {
 
 			@Override
 			public void focusGained(FocusEvent e) {
@@ -117,11 +118,10 @@ class FileEncryptUI extends JFrame implements ActionListener{
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				txtCheck.setText("You can search for a file here");
-				
+				//txtCheck.setText("You can search for a file here");
 			}
 		});
-*/
+
 		
 		btnExit = new JButton("Logout");
 		btnExit.setPreferredSize(new Dimension(80,20));
@@ -468,12 +468,16 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		if (btn == btnCheck) {
 			
 			String filename = txtCheck.getText();
+			System.out.println(filename);
 			txtCheck.setText("");
 			File userFolder = new File(userPath);
 			ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
 			
 			//clear output text
 			list.setText(null);
+			
+			// Set text box back to default message
+			txtCheck.setText("You can search for a file here");
 			
 			for(int i = 0; i < files.size(); i++)
 			{
@@ -602,8 +606,12 @@ class FileEncryptUI extends JFrame implements ActionListener{
 			//clear output text
 			list.setText(null);
 			
+			// THIS LINE SHOULDN'T BE REQUIRED, BASICALLY RENAMING USERPATH TO USERFOLDER
 			File userFolder = new File(userPath);
+			ArrayList<File> filesList = new ArrayList<File>(Arrays.asList(userFolder.listFiles()));
 			ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
+			
+			int folderLevel = 0;
 			
 			for(int i = 0; i < files.size(); i++)
 			{
@@ -613,6 +621,21 @@ class FileEncryptUI extends JFrame implements ActionListener{
 				{
 					list.append(files.get(i) + "\n");
 				}
+			}
+			
+			for(int i = 0; i < filesList.size(); i++)
+			{
+				File currentFile2 = filesList.get(i);
+				String fileName = currentFile2.getName();
+				if(!(fileName.charAt(0) == '.') && !(fileName.substring(fileName.length() - 3, fileName.length())).equals("key"))
+				{
+					if(currentFile2.isDirectory())
+					{
+						list.append(fileName);
+						folderLevel++;
+					}
+				}
+				
 			}
 		}
 		
