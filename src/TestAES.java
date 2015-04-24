@@ -19,6 +19,8 @@ import java.util.*;
 import java.awt.event.*;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import java.security.Key;
 
@@ -38,6 +40,9 @@ class FileEncryptUI extends JFrame implements ActionListener{
 
 	//declare form UI controls
 	private JTextField txtCheck;		//decrypt source key
+	
+	private JList fileList;
+	private DefaultListModel fileListModel;
 	
 	private JButton //btnEncBrw,			//browse encrypt source file
 					//btnDecBrw,			//browse decrypt source file
@@ -81,8 +86,6 @@ class FileEncryptUI extends JFrame implements ActionListener{
 	
 	private String userName;
 	private String userPath;
-	
-	JFrame windowRef = this;
 	
 	// Create swing components required for this JFrame
 	JLabel regUsernameLabel;
@@ -148,6 +151,21 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		btnDelete.addActionListener(this);
 		btnDelete.setMnemonic(KeyEvent.VK_E);
 		
+		fileListModel = new DefaultListModel();
+		
+		fileList = new JList(fileListModel);
+		fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		fileList.addListSelectionListener(new ListSelectionListener() {
+
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
+		
+		
 		btnList = new JButton("List");
 		btnList.setPreferredSize(new Dimension(80,20));
 		btnList.addActionListener(this);
@@ -171,9 +189,10 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		pnlCheck.add(btnCheck, "East");
 		
 		// File list panel
-		list = new JTextArea(2,3);
-		list.setEditable(false);
-		listScrollPane = new JScrollPane(list);
+		//list = new JTextArea(2,3);
+		//list.setEditable(false);
+		//listScrollPane = new JScrollPane(list);
+		listScrollPane = new JScrollPane(fileList);
 		listScrollPane.setPreferredSize(new Dimension(300, 300));
 		
 		pnlListText = new JPanel(new BorderLayout());
@@ -339,41 +358,50 @@ class FileEncryptUI extends JFrame implements ActionListener{
 			if (file==null)	return;
 			//txtEncFile.setText(file.getAbsolutePath());
 			
-			//open file and read data
-			//File file = new File(txtEncFile.getText());
-			byte data[] = readByteFile(file);
-			
 			String fileName = file.getName();
 			String encryptedFilePath = userPath + fileName;
-			//File dest = new File(userPath + fileName);	
 			
+			if(!new File(encryptedFilePath).exists())
+			{
 			
-			//encrypt and save as new data and key as new files						
-			data = AES.encrypt(data);
-			if (writeByteFile(encryptedFilePath,data) &&
-				writeObjectFile(encryptedFilePath + ".key",AES.getKey())){
-				/*try{
-					copyFile(file, dest);
-				} catch (IOException i) {
-					JOptionPane.showMessageDialog(null, "IOException",
-							"Error",JOptionPane.ERROR_MESSAGE);
-					}
-				*/
-				//remove old file
-				/*int reply = JOptionPane.showConfirmDialog(null, "Would you like to Delete the source file? ", 
-						"Delete source file", JOptionPane.YES_NO_OPTION);
+				//open file and read data
+				//File file = new File(txtEncFile.getText());
+				byte data[] = readByteFile(file);
 				
-				if(reply == JOptionPane.YES_OPTION)
-				{
-					file.delete();
+				
+				//encrypt and save as new data and key as new files						
+				data = AES.encrypt(data);
+				if (writeByteFile(encryptedFilePath,data) &&
+					writeObjectFile(encryptedFilePath + ".key",AES.getKey())){
+					/*try{
+						copyFile(file, dest);
+					} catch (IOException i) {
+						JOptionPane.showMessageDialog(null, "IOException",
+								"Error",JOptionPane.ERROR_MESSAGE);
+						}
+					*/
+					//remove old file
+					/*int reply = JOptionPane.showConfirmDialog(null, "Would you like to Delete the source file? ", 
+							"Delete source file", JOptionPane.YES_NO_OPTION);
+					
+					if(reply == JOptionPane.YES_OPTION)
+					{
+						file.delete();
+					}
+					*/
+					JOptionPane.showMessageDialog(null,
+						//"File encrypted as: " + file.getName() + ".enc\n" +
+						//"Encryption key: " + file.getName() + ".key\n",
+						"File successfully added to the system!",	
+						"Done",JOptionPane.INFORMATION_MESSAGE);				
 				}
-				*/
+			} 
+			else {
 				JOptionPane.showMessageDialog(null,
-					//"File encrypted as: " + file.getName() + ".enc\n" +
-					//"Encryption key: " + file.getName() + ".key\n",
-					"File successfully added to the system!",	
-					"Done",JOptionPane.INFORMATION_MESSAGE);				
-			}			
+					"ERROR: File already exists!",	
+					"FILE ENCRYPTION WARNING",JOptionPane.WARNING_MESSAGE);
+			}
+			
 		}
 
 		// delete a file
@@ -604,7 +632,7 @@ class FileEncryptUI extends JFrame implements ActionListener{
 		if(btn == btnList) {
 			
 			//clear output text
-			list.setText(null);
+			//list.setText(null);
 			
 			// THIS LINE SHOULDN'T BE REQUIRED, BASICALLY RENAMING USERPATH TO USERFOLDER
 			File userFolder = new File(userPath);
@@ -613,29 +641,36 @@ class FileEncryptUI extends JFrame implements ActionListener{
 			
 			int folderLevel = 0;
 			
-			for(int i = 0; i < files.size(); i++)
-			{
-				// List only files that aren't .key files and that DONT begin with '.'
+//			for(int i = 0; i < files.size(); i++)
+//			{
+//				// List only files that aren't .key files and that DONT begin with '.'
+//				String currentFile = files.get(i);
+//				if(!(currentFile.charAt(0) == '.') && !(currentFile.substring(currentFile.length() - 3, currentFile.length())).equals("key"))
+//				{
+//					list.append(files.get(i) + "\n");
+//				}
+//			}
+//			
+//			for(int i = 0; i < filesList.size(); i++)
+//			{
+//				File currentFile2 = filesList.get(i);
+//				String fileName = currentFile2.getName();
+//				if(!(fileName.charAt(0) == '.') && !(fileName.substring(fileName.length() - 3, fileName.length())).equals("key"))
+//				{
+//					if(currentFile2.isDirectory())
+//					{
+//						list.append(fileName);
+//						folderLevel++;
+//					}
+//				}
+//				
+//			}
+			for(int i = 0; i < files.size(); i++) {
 				String currentFile = files.get(i);
 				if(!(currentFile.charAt(0) == '.') && !(currentFile.substring(currentFile.length() - 3, currentFile.length())).equals("key"))
 				{
-					list.append(files.get(i) + "\n");
+					fileListModel.addElement(currentFile);
 				}
-			}
-			
-			for(int i = 0; i < filesList.size(); i++)
-			{
-				File currentFile2 = filesList.get(i);
-				String fileName = currentFile2.getName();
-				if(!(fileName.charAt(0) == '.') && !(fileName.substring(fileName.length() - 3, fileName.length())).equals("key"))
-				{
-					if(currentFile2.isDirectory())
-					{
-						list.append(fileName);
-						folderLevel++;
-					}
-				}
-				
 			}
 		}
 		
