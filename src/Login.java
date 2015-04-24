@@ -328,7 +328,7 @@ class LoginUI extends JFrame {
 	{
 		this.setVisible(false);
 		try {
-			new FileEncryptUI(currentUser).start(); 
+			new Area51UI(currentUser).start(); 
 		} catch (NoSuchAlgorithmException a) {
 			System.out.println("ERROR: NoSuchAlgorithmException.");
 			a.printStackTrace();
