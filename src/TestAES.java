@@ -10,7 +10,12 @@ import java.security.*;
 import java.awt.*;
 import java.util.*;
 import java.awt.event.*;
+
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -196,9 +201,31 @@ class Area51UI extends JFrame implements ActionListener{
 			// ***NOTE*** Currently does nothing, but would like to expand folder when selected
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
+				File selectedFile = fileList.getSelectedValue();
 				
+				// MUST test for null (why? I don't know)
+				if(selectedFile != null && selectedFile.isDirectory() && !e.getValueIsAdjusting())
+				{
+					expandListFolder(selectedFile);
+				}
 			}
 			
+		});
+		
+		fileList.setCellRenderer(new ListCellRenderer<File>() {
+
+			Border noFocusBorder = new EmptyBorder(15, 1, 1, 1);
+			TitledBorder focusBorder = new TitledBorder(LineBorder.createGrayLineBorder(), "title");
+			
+			DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+			
+			@Override
+			public Component getListCellRendererComponent(JList list, File value, int index, boolean isSelected, boolean cellHasFocus) {
+				
+				JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			    renderer.setBorder(cellHasFocus ? focusBorder : noFocusBorder);
+			    return renderer;	
+			}
 		});
 		
 		// ITEM: Main Panel Row 1
@@ -316,7 +343,11 @@ class Area51UI extends JFrame implements ActionListener{
 		// Create user folder
 		userPath = "./users/" + currentUser + "/";
 		boolean success = new File(userPath).mkdirs();
-		System.out.println(success);
+		if(success) {
+			System.out.println("New folder created for " + currentUser);
+		} else {
+			System.out.println("No new folder created for " + currentUser);
+		}
 		
 	}
 
@@ -382,6 +413,7 @@ class Area51UI extends JFrame implements ActionListener{
 			
 			//clear output text
 			//list.setText(null);
+			// USE fileListModel.clear(); to clear new list
 			
 			// If selected index is -1 then nothing is selected, so return
 			if(fileList.getSelectedIndex() == -1)
@@ -418,20 +450,26 @@ class Area51UI extends JFrame implements ActionListener{
 			
 			//clear output text
 			//list.setText(null);
+			// USE fileListModel.clear(); to clear new list
 			
 			//browse for file
-			File file = getFileDialogOpen("*.*");
-			if (file==null)	return;
+			//File file = getFileDialogOpen("*.*");
+			//if (file==null)	return;
 			
-			File encFile = new File((file).toString());
-			String path = encFile.getAbsolutePath();
+			File selectedFile = (File)fileList.getSelectedValue();
+			
+			File decFile = new File((selectedFile).toString());
+			String path = decFile.getAbsolutePath();
+			String keyPath = path.substring(0, path.length() - 4) + ".key";
+			System.out.println(path);
+			System.out.println(keyPath);
 			if (!isAdmin && !path.contains(currentUser)) {
 				JOptionPane.showMessageDialog(null, "ERROR: You do not have access to this file!");
 			} else {
-			File keyFile = new File(file + ".key");
+			File keyFile = new File(keyPath);
 			
 			//get encrypted file and key
-			if (!encFile.exists()){
+			if (!decFile.exists()){
 				JOptionPane.showMessageDialog(null,
 					"Encrypted file not found or cannot be accessed.",
 					"Error",JOptionPane.ERROR_MESSAGE);
@@ -446,33 +484,27 @@ class Area51UI extends JFrame implements ActionListener{
 			}
 			
 			//use key to decrypt data
-			byte data[] = readByteFile(encFile);
+			byte data[] = readByteFile(decFile);
 			Key key = (Key)readObjectFile(keyFile);
 			data = AES.decrypt(data,key);
 
 			//restore original file and remove encrypted file and key
-			String filename = encFile.getAbsolutePath().
-				substring(0,encFile.getAbsolutePath().length()-4);
+			String filename = decFile.getAbsolutePath().
+				substring(0,decFile.getAbsolutePath().length()-4);
 			if (writeByteFile(filename,data)){
 				JOptionPane.showMessageDialog(null,
 					"File sucessfully decrypted.",
 					"Done",JOptionPane.INFORMATION_MESSAGE);
-				//list.append(new String(encFile.getName() + " file contents: " + "\n" + "\n"));
-				//for(int i = 0; i < data.length; i += 45)
-				//{
-					//output.append(new String(data).substring(i, i + 45) + "\n");
-				//}
+				
 				int linePos = 0;
 				for(int i = 0; i < data.length; i++)
 				{
 					if(linePos >= 50 && data[i] == 0x20)
 					{
-						//list.append("\n");
 						linePos = 0;
 					}
 					else
 					{
-						//list.append((char)data[i] + "");
 						linePos++;
 					}
 				}
@@ -494,6 +526,7 @@ class Area51UI extends JFrame implements ActionListener{
 			
 			//clear output text
 			//list.setText(null);
+			// USE fileListModel.clear(); to clear new list
 			
 			// Set text box back to default message
 			txtCheck.setText("You can search for a file here");
@@ -575,8 +608,8 @@ class Area51UI extends JFrame implements ActionListener{
 			
 			//clear output text
 			//list.setText(null);
+			fileListModel.clear();
 			
-			// THIS LINE SHOULDN'T BE REQUIRED, BASICALLY RENAMING USERPATH TO USERFOLDER
 			File userFolder = new File(userPath);
 			ArrayList<File> files = new ArrayList<File>(Arrays.asList(userFolder.listFiles()));
 			//ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
@@ -600,6 +633,19 @@ class Area51UI extends JFrame implements ActionListener{
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		if (btn == btnLogout){
 				backToLogin();
+		}
+	}
+	
+	protected void expandListFolder(File folderPath)
+	{
+		File selectedFile = fileList.getSelectedValue();
+		int index = fileList.getSelectedIndex();
+		
+		ArrayList<File> files = new ArrayList<File>(Arrays.asList(folderPath.listFiles()));
+		
+		for(int i = 0; i < files.size(); i++)
+		{
+			fileListModel.add(index + i + 1, files.get(i));
 		}
 	}
 	
@@ -705,7 +751,7 @@ class Area51UI extends JFrame implements ActionListener{
 				"Error",JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-	}	
+	}
 
 	/**
 	 *	Reads a file and returns its contents as an array of objects
