@@ -766,17 +766,36 @@ class Area51UI extends JFrame implements ActionListener{
     	File[] subFiles = file.listFiles();
     	for(int i = 0; i < subFiles.length; i++)
     	{
-    		if(!(subFiles[i].getName().charAt(0) == '.'))
-			{
-	    		if(subFiles[i].isDirectory())
-	    		{
-	    			currentNode = fileTree.addObject(parent, subFiles[i]);
-	    			addFiles(currentNode, subFiles[i]);
-	    		}
-	    		else {
-	    			fileTree.addObject(parent,subFiles[i]);
-	    		}
-			}
+    		String fileName = subFiles[i].getName();
+    		if(!(fileName.charAt(0) == '.')) {
+    			try
+    			{
+		    		if (!fileName.substring(fileName.length() - 4, fileName.length()).equals(".key"))
+					{
+		    			System.out.println(fileName);
+		    			System.out.println("is Key File? " + fileName.substring(fileName.length() - 4, fileName.length()).equals(".key"));
+			    		if(subFiles[i].isDirectory())
+			    		{
+			    			currentNode = fileTree.addObject(parent, subFiles[i]);
+			    			addFiles(currentNode, subFiles[i]);
+			    		}
+			    		else {
+			    			fileTree.addObject(parent,subFiles[i]);
+			    		}
+					}
+    			} catch(StringIndexOutOfBoundsException e) {
+    				System.out.println("ERROR: String index out of bounds at: " + (fileName.length() - 4) + ", but must not be key file so adding it anyway");
+    				if(subFiles[i].isDirectory())
+		    		{
+		    			currentNode = fileTree.addObject(parent, subFiles[i]);
+		    			addFiles(currentNode, subFiles[i]);
+		    		}
+		    		else {
+		    			fileTree.addObject(parent,subFiles[i]);
+		    		}
+    				e.printStackTrace();
+    			}
+    		}
     	}
     }
 	
