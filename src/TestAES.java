@@ -18,6 +18,12 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 
 import java.security.Key;
 
@@ -33,12 +39,22 @@ public class TestAES{
  *	@author Wong Yat Seng
  */
 class Area51UI extends JFrame implements ActionListener{
+	
+	// Constants
+	private final String ADD_COMMAND = "add";
+    private final String REMOVE_COMMAND = "remove";
+    private final String CLEAR_COMMAND = "clear";
 
 	//declare form UI controls
 	private JTextField txtCheck;		// Field for user to input a file name (this will need to change to implement the file content checking)
 	
-	private JList<File> fileList;		// List of all a user's files
+	//private JList<File> fileList;		// List of all a user's files
 	private DefaultListModel<File> fileListModel;	// List model provides functionality to the file list
+	
+	private A51FileTree fileTree;
+	//private DefaultMutableTreeNode treeNode;
+	//private DefaultTreeModel treeModel;
+	//private JTree fileTree;
 	
 	private JButton btnAdd,				// Encrypt and add file to system
 					btnDisplay,			// Decrypt and display file contents
@@ -70,6 +86,8 @@ class Area51UI extends JFrame implements ActionListener{
 	
 	private String defaultCheckMessage = "You can search for a file here";
 	
+	
+	
 	// Registration labels
 	private JLabel regUsernameLabel;
 	private JLabel regPasswordLabel;
@@ -87,6 +105,7 @@ class Area51UI extends JFrame implements ActionListener{
 	boolean isValidUser = false;	// Is current user valid user? (Is this needed??)
 	String currentUser;				// User name of current user
 	private String userPath;		// String form of user's home path
+	private File userPathFile;
 	
 	/**
 	 *	Default constructor to launch program
@@ -102,7 +121,26 @@ class Area51UI extends JFrame implements ActionListener{
 		currentUser = user;
 		isAdmin = user.equals("admin");
 		
-	
+		// Create user folder
+		if(isAdmin)
+		{
+			userPath = "./users/";
+			userPathFile = new File(userPath);
+		}
+		else
+		{
+			userPath = "./users/" + currentUser + "/";
+			userPathFile = new File(userPath);
+		}
+		
+		System.out.println(userPathFile.getName());
+		boolean success = userPathFile.mkdir();
+		if(success) {
+			System.out.println("New folder created for " + currentUser);
+		} else {
+			System.out.println("No new folder created for " + currentUser);
+		}
+		
 		// Field for user input of file for content checking
 		txtCheck = new JTextField(defaultCheckMessage,30);
 		txtCheck.setForeground(Color.gray);
@@ -188,45 +226,10 @@ class Area51UI extends JFrame implements ActionListener{
 		btnDelete.addActionListener(this);
 		btnDelete.setMnemonic(KeyEvent.VK_E);
 		
-		// List Model assists in adding items and setting selection mode and actions
-		fileListModel = new DefaultListModel();
 		
-		// Configure list of files
-		fileList = new JList(fileListModel);
-		fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
-		// SelectionListener defines what should happen upon item selection
-		fileList.addListSelectionListener(new ListSelectionListener() {
-
-			// ***NOTE*** Currently does nothing, but would like to expand folder when selected
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				File selectedFile = fileList.getSelectedValue();
-				
-				// MUST test for null (why? I don't know)
-				if(selectedFile != null && selectedFile.isDirectory() && !e.getValueIsAdjusting())
-				{
-					expandListFolder(selectedFile);
-				}
-			}
-			
-		});
-		
-		fileList.setCellRenderer(new ListCellRenderer<File>() {
-
-			Border noFocusBorder = new EmptyBorder(15, 1, 1, 1);
-			TitledBorder focusBorder = new TitledBorder(LineBorder.createGrayLineBorder(), "title");
-			
-			DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
-			
-			@Override
-			public Component getListCellRendererComponent(JList list, File value, int index, boolean isSelected, boolean cellHasFocus) {
-				
-				JLabel renderer = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-			    renderer.setBorder(cellHasFocus ? focusBorder : noFocusBorder);
-			    return renderer;	
-			}
-		});
+		// Configure file list tree
+		fileTree = new A51FileTree(userPathFile);
+		populateTree(fileTree);
 		
 		// ITEM: Main Panel Row 1
 		// PURPOSE: Contains Top Row of Buttons (Add, List, Display)
@@ -253,7 +256,8 @@ class Area51UI extends JFrame implements ActionListener{
 		
 		// ITEM: Scroll pane container
 		// PURPOSE: Contains other JComponents to allow vertical and horizontal scrolling
-		listScrollPane = new JScrollPane(fileList);
+		//listScrollPane = new JScrollPane(fileList);
+		listScrollPane = new JScrollPane(fileTree);
 		listScrollPane.setPreferredSize(new Dimension(300, 300));
 		
 		pnlFileList = new JPanel(new BorderLayout());
@@ -338,17 +342,7 @@ class Area51UI extends JFrame implements ActionListener{
 	 *	Starts FileEncryptUI
 	 */
 	public void start(){
-		setVisible(true);
-		
-		// Create user folder
-		userPath = "./users/" + currentUser + "/";
-		boolean success = new File(userPath).mkdirs();
-		if(success) {
-			System.out.println("New folder created for " + currentUser);
-		} else {
-			System.out.println("No new folder created for " + currentUser);
-		}
-		
+		setVisible(true);	
 	}
 
 	/**
@@ -365,20 +359,50 @@ class Area51UI extends JFrame implements ActionListener{
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		if (btn == btnAdd){
 			
-			// Update list
-			
-			// Browse for source file
+			// Get the file to encrypt
 			String desktop = System.getProperty("user.home") + "/Desktop";
 			File file = getFileDialogOpen("*.*", desktop);
 			System.out.println(desktop);
-			if (file==null)	return;
-			//txtEncFile.setText(file.getAbsolutePath());
+			
+			if (file==null)	
+				return;
 			
 			String fileName = file.getName();
-			String encryptedFilePath = userPath + fileName;
+			//String encryptedFilePath = userPath + fileName;
 			
-			if(!new File(encryptedFilePath).exists())
-			{
+			// Update file tree
+			TreePath selectedPath = fileTree.tree.getSelectionPath();
+        	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+        	File selectedFilePath = (File)node.getUserObject();
+        	
+        	// MUST make sure file tree model matches files on disk
+        	// If selected path is not a directory then get the file's parent path to add at same hierarchy 
+        	// 	   level as selected file
+        	if(!selectedFilePath.isDirectory())
+        	{
+        		// Set path to path's parent (should be folder or null if root path)
+        		selectedPath = selectedPath.getParentPath();
+        		node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+            	selectedFilePath = (File)node.getUserObject();
+            	
+            	// If selectedPath is null or still not a directory, just set to users root folder
+            	if(selectedFilePath == null || !(selectedFilePath.isDirectory()))
+            	{
+            		selectedFilePath = new File(userPath);
+            	}
+        	}
+        	System.out.println(selectedFilePath);
+        	System.out.println(selectedFilePath.getName());
+        	
+        	File encryptedFilePath = new File(selectedFilePath + "/" + fileName);
+        	
+        	System.out.println(encryptedFilePath);
+			
+			//if(!new File(encryptedFilePath).exists())
+			if(!encryptedFilePath.exists())
+        	{
+				// Add new file to tree model
+				fileTree.addObject(encryptedFilePath);
 			
 				//open file and read data
 				//File file = new File(txtEncFile.getText());
@@ -387,8 +411,8 @@ class Area51UI extends JFrame implements ActionListener{
 				
 				//encrypt and save as new data and key as new files						
 				data = AES.encrypt(data);
-				if (writeByteFile(encryptedFilePath,data) &&
-					writeObjectFile(encryptedFilePath + ".key",AES.getKey())){
+				if (writeByteFile(encryptedFilePath + "", data) &&
+					writeObjectFile(encryptedFilePath + ".key", AES.getKey())){
 			
 					JOptionPane.showMessageDialog(null,
 						//"File encrypted as: " + file.getName() + ".enc\n" +
@@ -403,6 +427,7 @@ class Area51UI extends JFrame implements ActionListener{
 					"FILE ENCRYPTION WARNING",JOptionPane.WARNING_MESSAGE);
 			}
 			
+			
 		}
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -416,18 +441,18 @@ class Area51UI extends JFrame implements ActionListener{
 			// USE fileListModel.clear(); to clear new list
 			
 			// If selected index is -1 then nothing is selected, so return
-			if(fileList.getSelectedIndex() == -1)
-				return;
+			//if(fileList.getSelectedIndex() == -1)
+			//	return;
 			
-			File selectedFile = (File)fileList.getSelectedValue();
+			//File selectedFile = (File)fileList.getSelectedValue();
 			
-			if(selectedFile == null) 
-			{
-				System.out.println("ERROR: File is null");
-				return;
-			}
+			//if(selectedFile == null) 
+			//{
+			//	System.out.println("ERROR: File is null");
+			//	return;
+			//}
 			
-			File keyFile = new File(selectedFile.getAbsolutePath() + ".key");
+			//File keyFile = new File(selectedFile.getAbsolutePath() + ".key");
 			
 			//remove file
 			int reply = JOptionPane.showConfirmDialog(null, "Are you sure you would like to permanently delete this file? ", 
@@ -436,8 +461,8 @@ class Area51UI extends JFrame implements ActionListener{
 			if(reply == JOptionPane.YES_OPTION)
 			{
 				//file.delete();
-				selectedFile.delete();
-				keyFile.delete();
+				//selectedFile.delete();
+				//keyFile.delete();
 			}
 		}
 		
@@ -456,6 +481,7 @@ class Area51UI extends JFrame implements ActionListener{
 			//File file = getFileDialogOpen("*.*");
 			//if (file==null)	return;
 			
+			/*
 			File selectedFile = (File)fileList.getSelectedValue();
 			
 			File decFile = new File((selectedFile).toString());
@@ -509,7 +535,7 @@ class Area51UI extends JFrame implements ActionListener{
 					}
 				}
 			}
-			}
+			}*/
 		}
 		
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -614,7 +640,6 @@ class Area51UI extends JFrame implements ActionListener{
 			ArrayList<File> files = new ArrayList<File>(Arrays.asList(userFolder.listFiles()));
 			//ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
 			
-			int folderLevel = 0;
 
 			for(int i = 0; i < files.size(); i++) {
 				File currentFile = files.get(i);
@@ -636,18 +661,57 @@ class Area51UI extends JFrame implements ActionListener{
 		}
 	}
 	
-	protected void expandListFolder(File folderPath)
-	{
-		File selectedFile = fileList.getSelectedValue();
-		int index = fileList.getSelectedIndex();
+	/*
+	private void createTreeNodes(DefaultMutableTreeNode top) {
+		DefaultMutableTreeNode folder = null;
+		DefaultMutableTreeNode file = null;
 		
-		ArrayList<File> files = new ArrayList<File>(Arrays.asList(folderPath.listFiles()));
+		ArrayList<File> files = new ArrayList<File>(Arrays.asList(userPathFile.listFiles()));
 		
-		for(int i = 0; i < files.size(); i++)
-		{
-			fileListModel.add(index + i + 1, files.get(i));
+		for(int i = 0; i < files.size(); i++){
+			if(files.get(i).isDirectory()) {
+				folder = new DefaultMutableTreeNode(files.get(i));
+				top.add(folder);
+			}
+			else if(files.get(i).isFile()) {
+				file = new DefaultMutableTreeNode(files.get(i));
+				
+			}
 		}
+		
+		folder =
 	}
+	*/
+	
+	public void populateTree(A51FileTree treePanel) {
+    	
+        DefaultMutableTreeNode parent = null;
+ 
+        // root is users home folder (e.g. "./users/username/")
+        File root = userPathFile;
+        addFiles(parent, root);
+    }
+    
+    // Recursively adds files
+    public void addFiles(DefaultMutableTreeNode parent, File file) {
+    	
+    	DefaultMutableTreeNode currentNode;
+    	File[] subFiles = file.listFiles();
+    	for(int i = 0; i < subFiles.length; i++)
+    	{
+    		if(!(subFiles[i].getName().charAt(0) == '.'))
+			{
+	    		if(subFiles[i].isDirectory())
+	    		{
+	    			currentNode = fileTree.addObject(parent, subFiles[i]);
+	    			addFiles(currentNode, subFiles[i]);
+	    		}
+	    		else {
+	    			fileTree.addObject(parent,subFiles[i]);
+	    		}
+			}
+    	}
+    }
 	
 	/**
 	 *	Allow user to select a file using an Open Dialog
@@ -818,6 +882,7 @@ class Area51UI extends JFrame implements ActionListener{
 		try {
 		this.setVisible(false);
 		//Login obj = new Login();
+		isValidUser = false;
 		new LoginUI("User Login and Registration", 355, 175);
 		}
 		catch(NoSuchAlgorithmException e){
