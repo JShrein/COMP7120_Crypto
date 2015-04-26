@@ -436,6 +436,81 @@ class Area51UI extends JFrame implements ActionListener{
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		if (btn == btnDelete) {
 			
+			// Get the selected file from the tree model
+			TreePath selectedPath = fileTree.tree.getSelectionPath();
+        	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+        	File selectedFile = (File)node.getUserObject();
+        	
+        	// Don't try to delete unless we're sure it exists
+        	if(selectedFile.exists())
+        	{
+        		// File exists, need to check several possibilities
+        		// Need to delete the associated key file implicitly
+        		File associatedKeyFile = new File(selectedFile + ".key");
+        		
+        		if(!selectedFile.isDirectory())
+            	{
+        			// TYPICAL CASE: File exists and is NOT a directory,
+        			// Confirm deletion and proceed
+        			int reply = JOptionPane.showConfirmDialog(
+        					null, 
+        					"Are you sure you would like to permanently delete this file? ", 
+        					"Delete file", JOptionPane.YES_NO_OPTION
+        			);
+        			
+        			if(reply == JOptionPane.YES_OPTION)
+        			{
+        				selectedFile.delete();
+        				fileTree.removeCurrentNode();
+        				if(associatedKeyFile.exists())
+        				{
+        					associatedKeyFile.delete();
+        				}
+        			}
+            	}
+            	else if(selectedFile.isDirectory() && (selectedFile.listFiles()).length > 1)
+            	{
+            		System.out.println(selectedFile.listFiles().length);
+            		for(int i = 0; i < selectedFile.listFiles().length; i++)
+            		{
+            			System.out.println(selectedFile.listFiles()[i]);
+            		}
+            		// Error: Directory is not empty, do not delete
+            		JOptionPane.showMessageDialog(
+            				null,
+        					"ERROR: Directory is not empty!",	
+        					"FILE DELETION WARNING",JOptionPane.WARNING_MESSAGE
+        			);
+            	}
+            	else if(selectedFile.isDirectory())
+            	{
+            		// OK: Is directory && is empty
+        			// Confirm deletion and proceed
+        			int reply = JOptionPane.showConfirmDialog(
+        					null, 
+        					"Are you sure you would like to permanently delete this folder? ", 
+        					"Delete folder", JOptionPane.YES_NO_OPTION
+        			);
+        			
+        			if(reply == JOptionPane.YES_OPTION)
+        			{
+        				selectedFile.delete();
+        				fileTree.removeCurrentNode();
+        			}
+            	}
+            	else
+            	{
+            		// Error: Unknown error: If path was a file, a folder with files, or empty folder, then it 
+            		// 		would have been handled, so give general error
+            		JOptionPane.showMessageDialog(
+            				null,
+        					"ERROR: Unable to delete file!",	
+        					"FILE DELETION WARNING",JOptionPane.WARNING_MESSAGE
+        			);
+            	}
+        	}
+        	
+        	
 			//clear output text
 			//list.setText(null);
 			// USE fileListModel.clear(); to clear new list
@@ -455,15 +530,7 @@ class Area51UI extends JFrame implements ActionListener{
 			//File keyFile = new File(selectedFile.getAbsolutePath() + ".key");
 			
 			//remove file
-			int reply = JOptionPane.showConfirmDialog(null, "Are you sure you would like to permanently delete this file? ", 
-					"Delete source file", JOptionPane.YES_NO_OPTION);
 			
-			if(reply == JOptionPane.YES_OPTION)
-			{
-				//file.delete();
-				//selectedFile.delete();
-				//keyFile.delete();
-			}
 		}
 		
 		
