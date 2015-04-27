@@ -35,14 +35,8 @@ class Area51UI extends JFrame implements ActionListener{
 
 	//declare form UI controls
 	private JTextField txtSearch;		// Field for user to input a file name (this will need to change to implement the file content checking)
-	
-	//private JList<File> fileList;		// List of all a user's files
-	private DefaultListModel<File> fileListModel;	// List model provides functionality to the file list
-	
+		
 	private A51FileTree fileTree;
-	//private DefaultMutableTreeNode treeNode;
-	//private DefaultTreeModel treeModel;
-	//private JTree fileTree;
 	
 	private JButton btnAdd,				// Encrypt and add file to system
 					btnDisplay,			// Decrypt and display file contents
@@ -97,7 +91,7 @@ class Area51UI extends JFrame implements ActionListener{
 	
 	 // create a JTextArea
     JTextArea textArea = new JTextArea(30, 50);
-    // wrap a scrollpane around it
+    // wrap a scroll pane around it
     JScrollPane scrollPane = new JScrollPane(textArea);
 	
 	/**
@@ -196,16 +190,16 @@ class Area51UI extends JFrame implements ActionListener{
 		btnDisplay.addActionListener(this);
 		btnDisplay.setMnemonic(KeyEvent.VK_D);
 		
-		// ITEM: List Button
-		// PURPOSE: Displays a list of user's files
+		// ITEM: Check Button
+		// PURPOSE: Extracts file from associated text field and checks contents against stored files 
 		// Contained in pnlMain
 		btnCheck = new JButton("Check");
 		btnCheck.setPreferredSize(new Dimension(80,20));
 		btnCheck.addActionListener(this);
 		btnCheck.setMnemonic(KeyEvent.VK_L);
 		
-		// ITEM: Check Button
-		// PURPOSE: Extracts file from associated text field and checks contents against stored files 
+		// ITEM: Search Button
+		// PURPOSE: Extracts filename from associated text field and checks against stored filename 
 		// Contained in pnlMain
 		btnSearch = new JButton("Search");
 		btnSearch.setPreferredSize(new Dimension(80,20));
@@ -249,7 +243,6 @@ class Area51UI extends JFrame implements ActionListener{
 		
 		// ITEM: Scroll pane container
 		// PURPOSE: Contains other JComponents to allow vertical and horizontal scrolling
-		//listScrollPane = new JScrollPane(fileList);
 		listScrollPane = new JScrollPane(fileTree);
 		listScrollPane.setPreferredSize(new Dimension(300, 300));
 		
@@ -317,7 +310,7 @@ class Area51UI extends JFrame implements ActionListener{
 		
 		tab.add("About",pnlAbt);
 
-		// Instantiate SHA-256 hash digest obj
+		// Instantiate SHA-256 hash digest object
 		digest = MessageDigest.getInstance("SHA-256");
 		
 		// Set main JFrame (this) options
@@ -361,7 +354,6 @@ class Area51UI extends JFrame implements ActionListener{
 				return;
 			
 			String fileName = file.getName();
-			//String encryptedFilePath = userPath + fileName;
 			
 			// Update file tree
 			TreePath selectedPath = fileTree.tree.getSelectionPath();
@@ -392,17 +384,13 @@ class Area51UI extends JFrame implements ActionListener{
         	
         	System.out.println(encryptedFilePath);
 			
-			//if(!new File(encryptedFilePath).exists())
 			if(!encryptedFilePath.exists())
         	{
 				// Add new file to tree model
 				fileTree.addObject(encryptedFilePath);
 			
 				//open file and read data
-				//File file = new File(txtEncFile.getText());
 				byte data[] = readByteFile(file);
-				// Instantiate SHA-256 hash digest obj
-
 				digest.reset();
 				
 				for(int i = 0; i < data.length; i++)
@@ -413,13 +401,11 @@ class Area51UI extends JFrame implements ActionListener{
 				byte[] fileDigestBytes = digest.digest();
 				String fileDigest = toHashString(fileDigestBytes);
 				
-				
 				//encrypt and save as new data and key as new files						
 				data = AES.encrypt(data);
 				Key key = AES.getKey();
 				
 				System.out.println(toHashString(key.getEncoded()));
-				
 				digest.reset();
 				
 				for(int i = 0; i < data.length; i++)
@@ -546,28 +532,6 @@ class Area51UI extends JFrame implements ActionListener{
         			);
             	}
         	}
-        	
-        	
-			//clear output text
-			//list.setText(null);
-			// USE fileListModel.clear(); to clear new list
-			
-			// If selected index is -1 then nothing is selected, so return
-			//if(fileList.getSelectedIndex() == -1)
-			//	return;
-			
-			//File selectedFile = (File)fileList.getSelectedValue();
-			
-			//if(selectedFile == null) 
-			//{
-			//	System.out.println("ERROR: File is null");
-			//	return;
-			//}
-			
-			//File keyFile = new File(selectedFile.getAbsolutePath() + ".key");
-			
-			//remove file
-			
 		}
 		
 		
@@ -627,14 +591,9 @@ class Area51UI extends JFrame implements ActionListener{
 			
 			System.out.println(toHashString(key.getEncoded()));
 			
-			//String keyPath = path + ".key";
-			//System.out.println(path);
-			//System.out.println(keyPath);
 			if (!isAdmin && !path.contains(currentUser)) {
 				JOptionPane.showMessageDialog(null, "ERROR: You do not have access to this file!");
-			} else {
-			//File keyFile = new File(keyPath);
-			
+			} else {			
 			//get encrypted file and key
 			if (!decFile.exists()){
 				JOptionPane.showMessageDialog(null,
@@ -642,18 +601,9 @@ class Area51UI extends JFrame implements ActionListener{
 					"Error",JOptionPane.ERROR_MESSAGE);
 					return;
 			}
-
-			/*if (!keyFile.exists()){
-				JOptionPane.showMessageDialog(null,				
-					"Key file not found or cannot be accessed.",
-					"Error",JOptionPane.ERROR_MESSAGE);
-					return;
-			}
-			*/
 			
 			//use key to decrypt data
 			byte data[] = readByteFile(decFile);
-			//Key key = (Key)readObjectFile(keyFile);
 			data = AES.decrypt(data,key);
 
 			//restore original file and remove encrypted file and key
@@ -682,17 +632,13 @@ class Area51UI extends JFrame implements ActionListener{
 			String filename = txtSearch.getText();
 			System.out.println(filename);
 			txtSearch.setText("");
-			File userFolder = new File(userPath);
-			ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
-			
+			//File userFolder = new File(userPath);
+			//ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
 
         	DefaultMutableTreeNode node = fileTree.rootNode;
         	Enumeration<DefaultMutableTreeNode> filesInTree = node.breadthFirstEnumeration();
 			
-			//clear output text
-			//list.setText(null);
-			// USE fileListModel.clear(); to clear new list
-			
+        	
 			// Set text box back to default message
 			txtSearch.setText("You can search for a file here");
 			txtSearch.setForeground(Color.gray);
@@ -702,7 +648,7 @@ class Area51UI extends JFrame implements ActionListener{
 			while(filesInTree.hasMoreElements())
 			{
 				//String currentFile = files.get(i);
-				DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode)filesInTree.nextElement();
+				DefaultMutableTreeNode currentNode = filesInTree.nextElement();
 				File currentFile = (File)currentNode.getUserObject();
 				if(currentFile.getName().equals(filename))
 				{	
@@ -725,9 +671,7 @@ class Area51UI extends JFrame implements ActionListener{
 		if (btn == btnReg) 
 		{
 	    	String username = registerUsernameText.getText();
-			char[] password = registerPasswordText.getPassword();
-			// Instantiate SHA-256 hash digest obj
-			
+			char[] password = registerPasswordText.getPassword();			
 			digest.reset();
 			
 			for(int i = 0; i < password.length; i++)
@@ -792,8 +736,6 @@ class Area51UI extends JFrame implements ActionListener{
 		
 			//open file and read data
 			byte data[] = readByteFile(file);
-			// Instantiate SHA-256 hash digest obj
-			
 			digest.reset();
 			
 			for(int i = 0; i < data.length; i++)
@@ -834,25 +776,6 @@ class Area51UI extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(null, "No file exists in the system with the same content!");
 
 			}
-			/*
-			//clear output text
-			//list.setText(null);
-			fileListModel.clear();
-			
-			File userFolder = new File(userPath);
-			ArrayList<File> files = new ArrayList<File>(Arrays.asList(userFolder.listFiles()));
-			//ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
-			
-
-			for(int i = 0; i < files.size(); i++) {
-				File currentFile = files.get(i);
-				String currentFileName = currentFile.getName();
-				if(!(currentFileName.charAt(0) == '.') && !(currentFileName.substring(currentFileName.length() - 3, currentFileName.length())).equals("key"))
-				{
-					fileListModel.addElement(currentFile);
-				}
-			}
-			*/
 		}
 		
 		
@@ -864,28 +787,6 @@ class Area51UI extends JFrame implements ActionListener{
 				backToLogin();
 		}
 	}
-	
-	/*
-	private void createTreeNodes(DefaultMutableTreeNode top) {
-		DefaultMutableTreeNode folder = null;
-		DefaultMutableTreeNode file = null;
-		
-		ArrayList<File> files = new ArrayList<File>(Arrays.asList(userPathFile.listFiles()));
-		
-		for(int i = 0; i < files.size(); i++){
-			if(files.get(i).isDirectory()) {
-				folder = new DefaultMutableTreeNode(files.get(i));
-				top.add(folder);
-			}
-			else if(files.get(i).isFile()) {
-				file = new DefaultMutableTreeNode(files.get(i));
-				
-			}
-		}
-		
-		folder =
-	}
-	*/
 	
 	public void populateTree(A51FileTree treePanel) {
     	
@@ -1114,12 +1015,6 @@ class Area51UI extends JFrame implements ActionListener{
 					"Error",JOptionPane.ERROR_MESSAGE);
 			}
 	}
-	/*
-	protected void copyFile(File source, File dest)
-			throws IOException {
-		Files.copy(source.toPath(), dest.toPath());
-	}
-	*/
 	
 	/**
 	 *	Converts a byte array to a hex string
