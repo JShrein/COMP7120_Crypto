@@ -39,11 +39,6 @@ public class TestAES{
  *	@author Wong Yat Seng
  */
 class Area51UI extends JFrame implements ActionListener{
-	
-	// Constants
-	private final String ADD_COMMAND = "add";
-    private final String REMOVE_COMMAND = "remove";
-    private final String CLEAR_COMMAND = "clear";
 
 	//declare form UI controls
 	private JTextField txtSearch;		// Field for user to input a file name (this will need to change to implement the file content checking)
@@ -551,7 +546,6 @@ class Area51UI extends JFrame implements ActionListener{
 			File decFile = (File)node.getUserObject();
 			System.out.println(decFile);
 						
-			//File decFile = new File((selectedFile).toString());
 			String path = decFile.getPath();
 			String keyPath = path + ".key";
 			System.out.println(path);
