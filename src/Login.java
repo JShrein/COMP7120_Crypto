@@ -189,28 +189,6 @@ class LoginUI extends JFrame {
 				}
 			}
 		});
-	
-		loadSystem.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(isValidUser)
-				{
-					hideWindow();
-				}
-				
-			}
-		});
-		
-		exitButtonListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				System.exit(0);
-			}
-		};
-		
-		// Handle exit button clicks
-		loginExit.addActionListener(exitButtonListener);
 	}
 	
 	private String toHashString(byte[] characters)

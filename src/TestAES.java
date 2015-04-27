@@ -30,8 +30,19 @@ public class TestAES{
  *	@author Wong Yat Seng
  */
 class Area51UI extends JFrame implements ActionListener{
-
+	
 	private static final long serialVersionUID = 1L;
+	
+	private static final String ADD_FOLDER = "ADD_FOLDER";
+	private static final String DELETE_FILE = "DELETE_FILE";
+	private static final String DISPLAY = "DISPLAY";
+	private static final String ADD_FILE = "ADD_FILE";
+	private static final String SEARCH = "SEARCH";
+	private static final String CHECK = "CHECK";
+	private static final String REGISTER = "REGISTER";
+	private static final String LOGOUT = "LOGOUT";
+	
+	private Area51UI frameReference;
 
 	//declare form UI controls
 	private JTextField txtSearch;		// Field for user to input a file name (this will need to change to implement the file content checking)
@@ -164,6 +175,7 @@ class Area51UI extends JFrame implements ActionListener{
 		btnLogout = new JButton("Logout");
 		btnLogout.setPreferredSize(new Dimension(80,20));
 		btnLogout.addActionListener(this);
+		btnLogout.setActionCommand(LOGOUT);
 		btnLogout.setMnemonic(KeyEvent.VK_X);
 		
 		// ITEM: Register Button
@@ -172,6 +184,7 @@ class Area51UI extends JFrame implements ActionListener{
 		btnReg = new JButton("Register");
 		btnReg.setPreferredSize(new Dimension(80,20));
 		btnReg.addActionListener(this);
+		btnReg.setActionCommand(REGISTER);
 		btnReg.setMnemonic(KeyEvent.VK_R);
 		
 		// ITEM: Add Button
@@ -180,6 +193,7 @@ class Area51UI extends JFrame implements ActionListener{
 		btnAdd = new JButton("Add");
 		btnAdd.setPreferredSize(new Dimension(80,20));
 		btnAdd.addActionListener(this);
+		btnAdd.setActionCommand(ADD_FILE);
 		btnAdd.setMnemonic(KeyEvent.VK_A);
 		
 		// ITEM: Display Button
@@ -188,6 +202,7 @@ class Area51UI extends JFrame implements ActionListener{
 		btnDisplay = new JButton("Display");
 		btnDisplay.setPreferredSize(new Dimension(80,20));
 		btnDisplay.addActionListener(this);
+		btnDisplay.setActionCommand(DISPLAY);
 		btnDisplay.setMnemonic(KeyEvent.VK_D);
 		
 		// ITEM: Check Button
@@ -196,6 +211,7 @@ class Area51UI extends JFrame implements ActionListener{
 		btnCheck = new JButton("Check");
 		btnCheck.setPreferredSize(new Dimension(80,20));
 		btnCheck.addActionListener(this);
+		btnCheck.setActionCommand(CHECK);
 		btnCheck.setMnemonic(KeyEvent.VK_L);
 		
 		// ITEM: Search Button
@@ -204,6 +220,7 @@ class Area51UI extends JFrame implements ActionListener{
 		btnSearch = new JButton("Search");
 		btnSearch.setPreferredSize(new Dimension(80,20));
 		btnSearch.addActionListener(this);
+		btnSearch.setActionCommand(SEARCH);
 		btnSearch.setMnemonic(KeyEvent.VK_C);
 		
 		// Configure Delete button for removing encrypted files (and their key)
@@ -211,12 +228,14 @@ class Area51UI extends JFrame implements ActionListener{
 		btnDelete = new JButton("Delete");
 		btnDelete.setPreferredSize(new Dimension(80,20));
 		btnDelete.addActionListener(this);
+		btnDelete.setActionCommand(DELETE_FILE);
 		btnDelete.setMnemonic(KeyEvent.VK_E);
 		
 		
 		// Configure file list tree
 		fileTree = new A51FileTree(userPathFile);
 		populateTree(fileTree);
+		fileTree.tree.addMouseListener(new FileTreeMouseListener());
 		
 		// ITEM: Main Panel Row 1
 		// PURPOSE: Contains Top Row of Buttons (Add, List, Display)
@@ -321,6 +340,8 @@ class Area51UI extends JFrame implements ActionListener{
 		setTitle("AREA 51 - Secure File System");		
 		setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		setResizable(false);		
+		
+		frameReference = this;
 	}
 	
 	
@@ -333,17 +354,54 @@ class Area51UI extends JFrame implements ActionListener{
 
 	/**
 	 *	Receive and process user interactions
-	 *	@param e	Sender of the event
+	 *  Note: source may be JButton OR JMenuItem
+	 *  (May be able to avoid cast to source type by using action commands exclusively)
+	 *	@param e: Sender of the event
 	 */
 	public void actionPerformed(ActionEvent e){
-		JButton btn = (JButton)e.getSource();
 		
+		String actionCommand = e.getActionCommand();
+		
+		JButton btn = null;
+		JMenuItem mItem = null;
+		if(e.getSource() instanceof JButton)
+		{
+			btn = (JButton)e.getSource();
+		}
+		if(e.getSource() instanceof JMenuItem)
+		{
+			mItem = (JMenuItem)e.getSource();
+		}
+		
+		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+		// PURPOSE: Add a file into the system. 
+		// 			If a file with the same file already exists in the system, give an error.
+		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+		if (actionCommand.equals(ADD_FOLDER)){
+			
+			TreePath selectedPath = fileTree.tree.getSelectionPath();
+			File selectedFile = extractSelectedFileFromTree();
+			
+			if(selectedFile.isDirectory())
+			{
+				File newFolder = new File(selectedFile + "/New Folder");
+
+				boolean isCreated = newFolder.mkdir();
+				
+				if(isCreated)
+				{
+					fileTree.addObject(newFolder);
+				}
+			}
+			
+			System.out.println("Sorry, this doesn't fully work just yet");
+		}
 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		// PURPOSE: Add a file into the system. 
 		// 			If a file with the same file already exists in the system, give an error.
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnAdd){
+		if (actionCommand.equals(ADD_FILE)){
 			
 			// Get the file to encrypt
 			String desktop = System.getProperty("user.home") + "/Desktop";
@@ -358,31 +416,27 @@ class Area51UI extends JFrame implements ActionListener{
 			// Update file tree
 			TreePath selectedPath = fileTree.tree.getSelectionPath();
         	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-        	File selectedFilePath = (File)node.getUserObject();
+        	File selectedFile = (File)node.getUserObject();
       
         	
         	// MUST make sure file tree model matches files on disk
         	// If selected path is not a directory then get the file's parent path to add at same hierarchy 
         	// 	   level as selected file
-        	if(!selectedFilePath.isDirectory())
+        	if(!selectedFile.isDirectory())
         	{
         		// Set path to path's parent (should be folder or null if root path)
         		selectedPath = selectedPath.getParentPath();
         		node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-            	selectedFilePath = (File)node.getUserObject();
+        		selectedFile = (File)node.getUserObject();
             	
             	// If selectedPath is null or still not a directory, just set to users root folder
-            	if(selectedFilePath == null || !(selectedFilePath.isDirectory()))
+            	if(selectedFile == null || !(selectedFile.isDirectory()))
             	{
-            		selectedFilePath = new File(userPath);
+            		selectedFile = new File(userPath);
             	}
         	}
-        	System.out.println(selectedFilePath);
-        	System.out.println(selectedFilePath.getName());
         	
-        	File encryptedFilePath = new File(selectedFilePath + "/" + fileName);
-        	
-        	System.out.println(encryptedFilePath);
+        	File encryptedFilePath = new File(selectedFile + "/" + fileName);
 			
 			if(!encryptedFilePath.exists())
         	{
@@ -421,8 +475,7 @@ class Area51UI extends JFrame implements ActionListener{
 				
 				String hashAndKey = fileDigest + ":" + encFileDigest + ":" + keyHexString + "\n";
 				
-				if (writeByteFile(encryptedFilePath + "", data) &&
-					writeObjectFile(encryptedFilePath + ".key", key)){
+				if (writeByteFile(encryptedFilePath + "", data)){
 			
 					JOptionPane.showMessageDialog(null,
 						"File successfully added to the system!",	
@@ -457,20 +510,18 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Remove a file from the system
 		// NOTES: Key file is inferred from user selection and also deleted
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnDelete) {
+		if (actionCommand.equals(DELETE_FILE)) {
 			
 			// Get the selected file from the tree model
-			TreePath selectedPath = fileTree.tree.getSelectionPath();
+			/*TreePath selectedPath = fileTree.tree.getSelectionPath();
         	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-        	File selectedFile = (File)node.getUserObject();
+        	File selectedFile = (File)node.getUserObject();*/
+			File selectedFile = extractSelectedFileFromTree();
         	
         	// Don't try to delete unless we're sure it exists
         	if(selectedFile.exists())
         	{
         		// File exists, need to check several possibilities
-        		// Need to delete the associated key file implicitly
-        		File associatedKeyFile = new File(selectedFile + ".key");
-        		
         		if(!selectedFile.isDirectory())
             	{
         			// TYPICAL CASE: File exists and is NOT a directory,
@@ -485,10 +536,6 @@ class Area51UI extends JFrame implements ActionListener{
         			{
         				selectedFile.delete();
         				fileTree.removeCurrentNode();
-        				if(associatedKeyFile.exists())
-        				{
-        					associatedKeyFile.delete();
-        				}
         			}
             	}
             	else if(selectedFile.isDirectory() && (selectedFile.listFiles()).length > 1)
@@ -539,13 +586,10 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Displays the plaintext contents of a file
 		// NOTES: If the file does not exist, the system should give an error.
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnDisplay){			
+		if (actionCommand.equals(DISPLAY)){			
+
+			File decFile = extractSelectedFileFromTree();
 			
-			// Get the selected file from the tree model
-			TreePath selectedPath = fileTree.tree.getSelectionPath();
-			DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-			File decFile = (File)node.getUserObject();
-			System.out.println(decFile);
 						
 			// Hash the selected file to find the key in keyfile.txt
 			digest.reset();
@@ -589,8 +633,6 @@ class Area51UI extends JFrame implements ActionListener{
 			// Get key back from bytes
 			Key key = new SecretKeySpec(keyBytes, 0, keyBytes.length, "AES");
 			
-			System.out.println(toHashString(key.getEncoded()));
-			
 			if (!isAdmin && !path.contains(currentUser)) {
 				JOptionPane.showMessageDialog(null, "ERROR: You do not have access to this file!");
 			} else {			
@@ -627,7 +669,7 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Check the contents of the input file against stored files
 		// NOTES: 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnSearch) {
+		if (actionCommand.equals(SEARCH)){
 			
 			String filename = txtSearch.getText();
 			System.out.println(filename);
@@ -668,8 +710,8 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Register new users
 		// NOTES: Only available to administrator
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnReg) 
-		{
+		if (actionCommand.equals(REGISTER)) {
+			
 	    	String username = registerUsernameText.getText();
 			char[] password = registerPasswordText.getPassword();			
 			digest.reset();
@@ -723,7 +765,7 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: List all of the files in the users home folder
 		// NOTES: List sub-folders also, which can be expanded, listing those files, etc.,
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if(btn == btnCheck) {			
+		if (actionCommand.equals(CHECK)) {			
 			boolean isSame = false;
 
 			// Get the file to check
@@ -783,11 +825,16 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Logs out the current user and launches login gui
 		// NOTES: 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnLogout){
+		if (actionCommand.equals(LOGOUT)) {	
 				backToLogin();
 		}
 	}
 	
+	/**
+	 *	Populates file tree
+	 *	@param treePanel - Panel container for JTree tree model
+	 *	@return void
+	 */
 	public void populateTree(A51FileTree treePanel) {
     	
         DefaultMutableTreeNode parent = null;
@@ -797,7 +844,12 @@ class Area51UI extends JFrame implements ActionListener{
         addFiles(parent, root);
     }
     
-    // Recursively adds files
+	/**
+	 *	Recursively adds files to tree as nodes
+	 *	@param parent node, if file.isDirectory, then do recursive call with parent = file
+	 *	@param file represented by parent node
+	 *	@return void
+	 */
     public void addFiles(DefaultMutableTreeNode parent, File file) {
     	
     	DefaultMutableTreeNode currentNode;
@@ -806,34 +858,17 @@ class Area51UI extends JFrame implements ActionListener{
     	{
     		String fileName = subFiles[i].getName();
     		if(!(fileName.charAt(0) == '.')) {
-    			try
-    			{
-		    		if (!fileName.substring(fileName.length() - 4, fileName.length()).equals(".key"))
-					{
-		    			System.out.println(fileName);
-		    			System.out.println("is Key File? " + fileName.substring(fileName.length() - 4, fileName.length()).equals(".key"));
-			    		if(subFiles[i].isDirectory())
-			    		{
-			    			currentNode = fileTree.addObject(parent, subFiles[i]);
-			    			addFiles(currentNode, subFiles[i]);
-			    		}
-			    		else {
-			    			fileTree.addObject(parent,subFiles[i]);
-			    		}
-					}
-    			} catch(StringIndexOutOfBoundsException e) {
-    				System.out.println("ERROR: String index out of bounds at: " + (fileName.length() - 4) + ", but must not be key file so adding it anyway");
-    				if(subFiles[i].isDirectory())
-		    		{
-		    			currentNode = fileTree.addObject(parent, subFiles[i]);
-		    			addFiles(currentNode, subFiles[i]);
-		    		}
-		    		else {
-		    			fileTree.addObject(parent,subFiles[i]);
-		    		}
-    				e.printStackTrace();
-    			}
-    		}
+
+    			System.out.println(fileName);
+	    		if(subFiles[i].isDirectory())
+	    		{
+	    			currentNode = fileTree.addObject(parent, subFiles[i]);
+	    			addFiles(currentNode, subFiles[i]);
+	    		}
+	    		else {
+	    			fileTree.addObject(parent,subFiles[i]);
+	    		}
+			}
     	}
     }
 	
@@ -1002,6 +1037,11 @@ class Area51UI extends JFrame implements ActionListener{
 		}
 	}
 	
+	/**
+	 *	Performs cleanup actions before returning to LoginUI
+	 *	@param void
+	 *	@return void
+	 */
 	protected void backToLogin(){
 		try {
 		this.setVisible(false);
@@ -1035,6 +1075,11 @@ class Area51UI extends JFrame implements ActionListener{
 		return sb.toString();
 	}
 	
+	/**
+	 *	Converts a hex string to a byte array
+	 *	@param string containing hexadecimal characters
+	 *	@return array of bytes represented by hex chars
+	 */
 	protected byte[] toByteArray(String hexString)
 	{
 		int len = hexString.length();
@@ -1044,5 +1089,84 @@ class Area51UI extends JFrame implements ActionListener{
 	                             + Character.digit(hexString.charAt(i+1), 16));
 	    }
 	    return data;
+	}
+	
+	protected class FileTreeMouseListener implements MouseListener {
+
+		@Override
+		public void mouseClicked(MouseEvent event) {
+			if (SwingUtilities.isRightMouseButton(event)) {
+				
+				JPopupMenu contextMenu = new JPopupMenu();
+				
+				JMenuItem addFolder = new JMenuItem();
+				addFolder.setText("Create New Folder");
+				addFolder.setMnemonic(KeyEvent.VK_C);
+				addFolder.setActionCommand(ADD_FOLDER);
+				addFolder.addActionListener(frameReference);
+				
+				JMenuItem display = new JMenuItem();
+				display.setText("Display Contents");
+				display.setMnemonic(KeyEvent.VK_S);
+				display.setActionCommand(DISPLAY);
+				display.addActionListener(frameReference);
+				
+				JMenuItem delete = new JMenuItem();
+				delete.setText("Delete File");
+				delete.setMnemonic(KeyEvent.VK_D);
+				delete.setActionCommand(DELETE_FILE);
+				delete.addActionListener(frameReference);
+				
+				contextMenu.add(addFolder);
+				contextMenu.addSeparator();
+				contextMenu.add(display);
+				contextMenu.addSeparator();
+				contextMenu.add(delete);
+
+		        int row = fileTree.tree.getClosestRowForLocation(event.getX(), event.getY());
+		        fileTree.tree.setSelectionRow(row);
+		        contextMenu.show(event.getComponent(), event.getX(), event.getY());
+		        
+		        
+		    }
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+	
+	
+	/**
+	 *	PURPOSE: Use user's selection to get the file from tree model
+	 *	@param void
+	 *	@return Selected file
+	 */
+	private File extractSelectedFileFromTree()
+	{
+		TreePath selectedPath = fileTree.tree.getSelectionPath();
+		DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+		File selectedFile = (File)selectedNode.getUserObject();
+		return selectedFile;
 	}
 }
