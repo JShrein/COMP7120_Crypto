@@ -718,9 +718,15 @@ class Area51UI extends JFrame implements ActionListener{
 		// NOTES: List sub-folders also, which can be expanded, listing those files, etc.,
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		if(btn == btnCheck) {
+<<<<<<< HEAD
 			
 			boolean isSame = false;
 			
+=======
+			
+			boolean isSame = false;
+			
+>>>>>>> 087058e0c35e5db1bcdc9acede60f806ed2ab25f
 			// Get the file to check
 			String desktop = System.getProperty("user.home") + "/Desktop";
 			File file = getFileDialogOpen("*.*", desktop);
