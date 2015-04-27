@@ -108,7 +108,7 @@ class Area51UI extends JFrame implements ActionListener{
 	private File userPathFile;
 	
 	 // create a JTextArea
-    JTextArea textArea = new JTextArea(6, 25);
+    JTextArea textArea = new JTextArea(30, 50);
     // wrap a scrollpane around it
     JScrollPane scrollPane = new JScrollPane(textArea);
 	
@@ -582,9 +582,6 @@ class Area51UI extends JFrame implements ActionListener{
 			data = AES.decrypt(data,key);
 
 			//restore original file and remove encrypted file and key
-			String filename = decFile.getAbsolutePath().
-				substring(0,decFile.getAbsolutePath().length()-4);
-			if (writeByteFile(filename,data)){
 				JOptionPane.showMessageDialog(null,
 					"File sucessfully decrypted.",
 					"Done",JOptionPane.INFORMATION_MESSAGE);
@@ -598,20 +595,6 @@ class Area51UI extends JFrame implements ActionListener{
 			    textArea.setText(text);
 			    // display them in a message dialog
 			    JOptionPane.showMessageDialog(null, scrollPane);
-		/*		
-				int linePos = 0;
-				for(int i = 0; i < data.length; i++)
-				{
-					if(linePos >= 50 && data[i] == 0x20)
-					{
-						linePos = 0;
-					}
-					else
-					{
-						linePos++;
-					}
-				}*/
-			}
 			}
 		}
 		
