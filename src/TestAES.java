@@ -11,6 +11,7 @@ import java.awt.*;
 import java.util.*;
 import java.awt.event.*;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -408,12 +409,9 @@ class Area51UI extends JFrame implements ActionListener{
 				//File file = new File(txtEncFile.getText());
 				byte data[] = readByteFile(file);
 				// Instantiate SHA-256 hash digest obj
-				try {
-					digest = MessageDigest.getInstance("SHA-256");
-				} catch (NoSuchAlgorithmException e2) {
-					// TODO Auto-generated catch block
-					e2.printStackTrace();
-				}
+
+				digest.reset();
+				
 				for(int i = 0; i < data.length; i++)
 				{
 					digest.update(data[i]);
@@ -425,11 +423,24 @@ class Area51UI extends JFrame implements ActionListener{
 				
 				//encrypt and save as new data and key as new files						
 				data = AES.encrypt(data);
-				Key key = AES.getKey();				
+				Key key = AES.getKey();
+				
+				System.out.println(toHashString(key.getEncoded()));
+				
+				digest.reset();
+				
+				for(int i = 0; i < data.length; i++)
+				{
+					digest.update(data[i]);
+				}
+				
+				byte[] encFileDigestBytes = digest.digest();
+				String encFileDigest = toHashString(encFileDigestBytes);
+				
 				byte[] keyBytes = key.getEncoded();
 				String keyHexString = toHashString(keyBytes);
 				
-				String hashAndKey = fileDigest + ":" + keyHexString + "\n";
+				String hashAndKey = fileDigest + ":" + encFileDigest + ":" + keyHexString + "\n";
 				
 				if (writeByteFile(encryptedFilePath + "", data) &&
 					writeObjectFile(encryptedFilePath + ".key", key)){
@@ -579,14 +590,57 @@ class Area51UI extends JFrame implements ActionListener{
 			File decFile = (File)node.getUserObject();
 			System.out.println(decFile);
 						
+			// Hash the selected file to find the key in keyfile.txt
+			digest.reset();
+			byte[] keyBytes = null;
+			
+			byte[] encryptedFileBytes = readByteFile(decFile);
+			
+			for(int i = 0; i < encryptedFileBytes.length; i++)
+			{
+				digest.update(encryptedFileBytes[i]);
+			}
+			
+			String encryptedFileHash = toHashString(digest.digest());
+			
+			try {
+				RandomAccessFile keyFile = new RandomAccessFile("keyfile.txt", "rw");
+				
+				while ((keyFile.getFilePointer()) != (keyFile.length())) {
+					
+					String storedFileHash = keyFile.readLine();
+					String hash[] = storedFileHash.split(":");
+					
+					if (hash[1].equals(encryptedFileHash)) {
+						keyBytes = toByteArray(hash[2]);
+						break;
+					}
+				}
+				keyFile.close();
+				
+			} catch (FileNotFoundException e0) {
+				System.out.println("ERROR: File not found.");
+				e0.printStackTrace();
+			} catch (IOException e1) {
+				System.out.println("ERROR: Unable to access file");
+				e1.printStackTrace();
+			}
+			
+			
 			String path = decFile.getPath();
-			String keyPath = path + ".key";
-			System.out.println(path);
-			System.out.println(keyPath);
+			
+			// Get key back from bytes
+			Key key = new SecretKeySpec(keyBytes, 0, keyBytes.length, "AES");
+			
+			System.out.println(toHashString(key.getEncoded()));
+			
+			//String keyPath = path + ".key";
+			//System.out.println(path);
+			//System.out.println(keyPath);
 			if (!isAdmin && !path.contains(currentUser)) {
 				JOptionPane.showMessageDialog(null, "ERROR: You do not have access to this file!");
 			} else {
-			File keyFile = new File(keyPath);
+			//File keyFile = new File(keyPath);
 			
 			//get encrypted file and key
 			if (!decFile.exists()){
@@ -596,16 +650,17 @@ class Area51UI extends JFrame implements ActionListener{
 					return;
 			}
 
-			if (!keyFile.exists()){
+			/*if (!keyFile.exists()){
 				JOptionPane.showMessageDialog(null,				
 					"Key file not found or cannot be accessed.",
 					"Error",JOptionPane.ERROR_MESSAGE);
 					return;
 			}
+			*/
 			
 			//use key to decrypt data
 			byte data[] = readByteFile(decFile);
-			Key key = (Key)readObjectFile(keyFile);
+			//Key key = (Key)readObjectFile(keyFile);
 			data = AES.decrypt(data,key);
 
 			//restore original file and remove encrypted file and key
@@ -1084,5 +1139,16 @@ class Area51UI extends JFrame implements ActionListener{
     	}
 		
 		return sb.toString();
+	}
+	
+	protected byte[] toByteArray(String hexString)
+	{
+		int len = hexString.length();
+	    byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+	                             + Character.digit(hexString.charAt(i+1), 16));
+	    }
+	    return data;
 	}
 }
