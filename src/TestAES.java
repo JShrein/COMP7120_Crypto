@@ -427,13 +427,23 @@ class Area51UI extends JFrame implements ActionListener{
 				return;
 			
 			String fileName = file.getName();
-			
+			DefaultMutableTreeNode node = null;
+			TreePath selectedPath = null;
+			try{
 			// Update file tree
-			TreePath selectedPath = fileTree.tree.getSelectionPath();
-        	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+			selectedPath = fileTree.tree.getSelectionPath();
+        	node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+
+			} catch (NullPointerException k) {
+        	//if (selectedPath.equals(null)) {
+        		System.out.println("it's null");
+    			selectedPath = fileTree.tree.getSelectionPath();
+    			node = fileTree.rootNode;
+    			System.out.println("Path is " + selectedPath);
+
+			}
         	File selectedFile = (File)node.getUserObject();
         	System.out.println(selectedFile.toString());
-      
         	
         	// MUST make sure file tree model matches files on disk
         	// If selected path is not a directory then get the file's parent path to add at same hierarchy 
@@ -805,6 +815,46 @@ class Area51UI extends JFrame implements ActionListener{
 			String dataHash = toHashString(dataHashBytes);
 			System.out.println(dataHash);
 			
+			String filepath = file.getName();
+			File[] subFiles = ((File) (fileTree.rootNode.getUserObject())).listFiles();
+			for (int i = 0; i < subFiles.length; i++) {
+				if (filepath.equals(subFiles[i].getName())) {
+					//open file and read data
+					byte foundfile[] = readByteFile(subFiles[i]);
+					digest.reset();
+					for(int j = 0; j < foundfile.length; j++)
+					{
+						digest.update(foundfile[j]);
+					}
+					
+					byte[] foundBytes = digest.digest();
+					String foundHash = toHashString(foundBytes);
+					System.out.println(foundHash);
+					
+					try {
+						RandomAccessFile checkFile = new RandomAccessFile("keyfile.txt", "rw");
+						
+						while ((checkFile.getFilePointer()) != (checkFile.length())) {
+							String storedFileHash = checkFile.readLine();
+							String hash[] = storedFileHash.split(":");
+							System.out.println(hash[0]);
+							System.out.println(hash[1]);
+							if (hash[0].equals(dataHash) && hash[1].equals(foundHash)) {
+								isSame = true;
+								break;
+							}
+						}
+						checkFile.close();
+					} catch (FileNotFoundException e0) {
+						System.out.println("ERROR: File not found.");
+						e0.printStackTrace();
+					} catch (IOException e1) {
+						System.out.println("ERROR: Unable to access file");
+						e1.printStackTrace();
+					}
+				}
+			}
+		/*	
 			try {
 				RandomAccessFile checkFile = new RandomAccessFile("keyfile.txt", "rw");
 				
@@ -825,7 +875,7 @@ class Area51UI extends JFrame implements ActionListener{
 				System.out.println("ERROR: Unable to access file");
 				e1.printStackTrace();
 			}
-			
+			*/
 			
 			if (isSame == true) {
 				JOptionPane.showMessageDialog(null, "There is a file that exists in the system with the same content!");
