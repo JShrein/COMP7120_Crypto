@@ -61,11 +61,12 @@ public class A51FileTree extends JPanel {
 
         if (parentPath == null) {
             parentNode = rootNode;
+            
         } else {
         	// Modified so that adding to a child node DOES NOT convert child node to parent node
         	//		since this behavior is NOT mirrored on the hard disk
         	//		Will need a method to create new folders if this is desired.
-            parentNode = (DefaultMutableTreeNode) parentPath.getParentPath().getLastPathComponent();//parentPath.getLastPathComponent();
+            parentNode = (DefaultMutableTreeNode) parentPath.getLastPathComponent();
         }
 
         return addObject(parentNode, child, true);

@@ -367,6 +367,7 @@ class Area51UI extends JFrame implements ActionListener{
 			TreePath selectedPath = fileTree.tree.getSelectionPath();
         	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
         	File selectedFilePath = (File)node.getUserObject();
+      
         	
         	// MUST make sure file tree model matches files on disk
         	// If selected path is not a directory then get the file's parent path to add at same hierarchy 
@@ -684,6 +685,10 @@ class Area51UI extends JFrame implements ActionListener{
 			File userFolder = new File(userPath);
 			ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
 			
+
+        	DefaultMutableTreeNode node = fileTree.rootNode;
+        	Enumeration<DefaultMutableTreeNode> filesInTree = node.breadthFirstEnumeration();
+			
 			//clear output text
 			//list.setText(null);
 			// USE fileListModel.clear(); to clear new list
@@ -692,17 +697,24 @@ class Area51UI extends JFrame implements ActionListener{
 			txtSearch.setText("You can search for a file here");
 			txtSearch.setForeground(Color.gray);
 			
-			for(int i = 0; i < files.size(); i++)
+			boolean foundFile = false;
+			
+			while(filesInTree.hasMoreElements())
 			{
-				String currentFile = files.get(i);
-				if(currentFile.equals(filename))
+				//String currentFile = files.get(i);
+				DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode)filesInTree.nextElement();
+				File currentFile = (File)currentNode.getUserObject();
+				if(currentFile.getName().equals(filename))
 				{	
-					//list.append("This file exists in the system: " + "\n" + "\n");
-					//list.append(files.get(i) + "\n");
+					JOptionPane.showMessageDialog(null, "This file is in the system");
+					foundFile = true;
+					//fileTree.tree.setSelectionPath(currentNode.getParent());
 					break;
-				} else if (!currentFile.equals(filename) && i == (files.size() - 1)) {
-					JOptionPane.showMessageDialog(null, "ERROR: This file does not exist!");
 				}
+			}
+			if(!foundFile)
+			{
+				JOptionPane.showMessageDialog(null, "ERROR: This file does not exist!");
 			}
 		}
 		
