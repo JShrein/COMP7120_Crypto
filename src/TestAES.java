@@ -107,6 +107,11 @@ class Area51UI extends JFrame implements ActionListener{
 	private String userPath;		// String form of user's home path
 	private File userPathFile;
 	
+	 // create a JTextArea
+    JTextArea textArea = new JTextArea(6, 25);
+    // wrap a scrollpane around it
+    JScrollPane scrollPane = new JScrollPane(textArea);
+	
 	/**
 	 *	Default constructor to launch program
 	 */
@@ -540,20 +545,15 @@ class Area51UI extends JFrame implements ActionListener{
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		if (btn == btnDisplay){			
 			
-			//clear output text
-			//list.setText(null);
-			// USE fileListModel.clear(); to clear new list
-			
-			//browse for file
-			//File file = getFileDialogOpen("*.*");
-			//if (file==null)	return;
-			
-			/*
-			File selectedFile = (File)fileList.getSelectedValue();
-			
-			File decFile = new File((selectedFile).toString());
-			String path = decFile.getAbsolutePath();
-			String keyPath = path.substring(0, path.length() - 4) + ".key";
+			// Get the selected file from the tree model
+			TreePath selectedPath = fileTree.tree.getSelectionPath();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+			File decFile = (File)node.getUserObject();
+			System.out.println(decFile);
+						
+			//File decFile = new File((selectedFile).toString());
+			String path = decFile.getPath();
+			String keyPath = path + ".key";
 			System.out.println(path);
 			System.out.println(keyPath);
 			if (!isAdmin && !path.contains(currentUser)) {
@@ -588,7 +588,17 @@ class Area51UI extends JFrame implements ActionListener{
 				JOptionPane.showMessageDialog(null,
 					"File sucessfully decrypted.",
 					"Done",JOptionPane.INFORMATION_MESSAGE);
+				String text = "";
+				for (int i=0;i < data.length; i++) {
+					char a = (char)data[i];
+					text += a;
+				}
 				
+			    textArea.setEditable(false);
+			    textArea.setText(text);
+			    // display them in a message dialog
+			    JOptionPane.showMessageDialog(null, scrollPane);
+		/*		
 				int linePos = 0;
 				for(int i = 0; i < data.length; i++)
 				{
@@ -600,9 +610,9 @@ class Area51UI extends JFrame implements ActionListener{
 					{
 						linePos++;
 					}
-				}
+				}*/
 			}
-			}*/
+			}
 		}
 		
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
