@@ -413,17 +413,44 @@ class Area51UI extends JFrame implements ActionListener{
 				//File file = new File(txtEncFile.getText());
 				byte data[] = readByteFile(file);
 				
+				for(int i = 0; i < data.length; i++)
+				{
+					digest.update(data[i]);
+				}
+				
+				byte[] fileDigestBytes = digest.digest();
+				String fileDigest = toHashString(fileDigestBytes);
+				
 				
 				//encrypt and save as new data and key as new files						
 				data = AES.encrypt(data);
+				Key key = AES.getKey();				
+				byte[] keyBytes = key.getEncoded();
+				String keyHexString = toHashString(keyBytes);
+				
+				String hashAndKey = fileDigest + ":" + keyHexString + "\n";
+				
 				if (writeByteFile(encryptedFilePath + "", data) &&
-					writeObjectFile(encryptedFilePath + ".key", AES.getKey())){
+					writeObjectFile(encryptedFilePath + ".key", key)){
 			
 					JOptionPane.showMessageDialog(null,
-						//"File encrypted as: " + file.getName() + ".enc\n" +
-						//"Encryption key: " + file.getName() + ".key\n",
 						"File successfully added to the system!",	
 						"Done",JOptionPane.INFORMATION_MESSAGE);				
+				}
+
+				try {
+					RandomAccessFile keyfile = new RandomAccessFile("keyfile.txt", "rw");
+					
+					keyfile.seek(keyfile.length());
+					keyfile.writeBytes(hashAndKey);
+					keyfile.close();
+
+				} catch (FileNotFoundException e0) {
+					System.out.println("ERROR: File not found.");
+					e0.printStackTrace();
+				} catch (IOException e1) {
+					System.out.println("ERROR: Unable to access file");
+					e1.printStackTrace();
 				}
 			} 
 			else {
