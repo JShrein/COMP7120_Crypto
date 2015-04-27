@@ -407,7 +407,13 @@ class Area51UI extends JFrame implements ActionListener{
 				//open file and read data
 				//File file = new File(txtEncFile.getText());
 				byte data[] = readByteFile(file);
-				
+				// Instantiate SHA-256 hash digest obj
+				try {
+					digest = MessageDigest.getInstance("SHA-256");
+				} catch (NoSuchAlgorithmException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
 				for(int i = 0; i < data.length; i++)
 				{
 					digest.update(data[i]);
@@ -661,7 +667,13 @@ class Area51UI extends JFrame implements ActionListener{
 		{
 	    	String username = registerUsernameText.getText();
 			char[] password = registerPasswordText.getPassword();
-			
+			// Instantiate SHA-256 hash digest obj
+			try {
+				digest = MessageDigest.getInstance("SHA-256");
+			} catch (NoSuchAlgorithmException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
 			for(int i = 0; i < password.length; i++)
 			{
 				digest.update((byte)password[i]);
@@ -711,16 +723,9 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: List all of the files in the users home folder
 		// NOTES: List sub-folders also, which can be expanded, listing those files, etc.,
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if(btn == btnCheck) {
-<<<<<<< HEAD
-			
+		if(btn == btnCheck) {			
 			boolean isSame = false;
-			
-=======
-			
-			boolean isSame = false;
-			
->>>>>>> 087058e0c35e5db1bcdc9acede60f806ed2ab25f
+
 			// Get the file to check
 			String desktop = System.getProperty("user.home") + "/Desktop";
 			File file = getFileDialogOpen("*.*", desktop);
@@ -728,22 +733,23 @@ class Area51UI extends JFrame implements ActionListener{
 						
 			if (file==null)	
 				return;
-												
-			// Update file tree
-			TreePath selectedPath = fileTree.tree.getSelectionPath();
-			DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-			File selectedFilePath = (File)node.getUserObject();			
-			
+		
 			//open file and read data
-			//File file = new File(txtEncFile.getText());
-			byte data[] = readByteFile(selectedFilePath); 
-			for(int i = 0; i < data.length; i++)
+			byte data[] = readByteFile(file);
+			// Instantiate SHA-256 hash digest obj
+			try {
+				digest = MessageDigest.getInstance("SHA-256");
+			} catch (NoSuchAlgorithmException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}			for(int i = 0; i < data.length; i++)
 			{
 				digest.update(data[i]);
 			}
 			
 			byte[] dataHashBytes = digest.digest();
 			String dataHash = toHashString(dataHashBytes);
+			System.out.println(dataHash);
 			
 			try {
 				RandomAccessFile checkFile = new RandomAccessFile("keyfile.txt", "rw");
@@ -751,6 +757,7 @@ class Area51UI extends JFrame implements ActionListener{
 				while ((checkFile.getFilePointer()) != (checkFile.length())) {
 					String storedFileHash = checkFile.readLine();
 					String hash[] = storedFileHash.split(":");
+					System.out.println(hash[0]);
 					if (hash[0].equals(dataHash)) {
 						isSame = true;
 						break;
