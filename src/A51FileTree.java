@@ -117,7 +117,7 @@ public class A51FileTree extends JPanel {
         if (parent == null) {
             parent = rootNode;
         }
-	
+        
         //It is key to invoke this on the TreeModel, and NOT DefaultMutableTreeNode
         treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
 
@@ -163,18 +163,12 @@ public class A51FileTree extends JPanel {
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
-            // decide what icons you want by examining the node
             if (value instanceof DefaultMutableTreeNode) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                 File fileNode;
-                //if(node.getUserObject() instanceof String)
-                //{
-                	//fileNode = new File((String)node.getUserObject());
-                //}
-                //else
-                //{
-                	fileNode = (File)node.getUserObject();
-                //}
+              
+                fileNode = (File)node.getUserObject();
+                
                 if (fileNode.isDirectory()) {
                 	if(expanded) {
                 		// Should display openIcon, but since both icons are the same it doesn't really matter

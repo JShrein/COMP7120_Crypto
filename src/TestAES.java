@@ -21,6 +21,21 @@ import java.security.Key;
 public class TestAES{
 	
 	public static void main(String args[]) throws IOException, NoSuchAlgorithmException{
+		try {
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		new Area51UI("default").start();
 	}	
 }
@@ -182,7 +197,7 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Allows admin to register a new user
 		// Contained in pnlReg
 		btnReg = new JButton("Register");
-		btnReg.setPreferredSize(new Dimension(80,20));
+		btnReg.setPreferredSize(new Dimension(100,20));
 		btnReg.addActionListener(this);
 		btnReg.setActionCommand(REGISTER);
 		btnReg.setMnemonic(KeyEvent.VK_R);
@@ -200,7 +215,7 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Decrypts selected file and displays text
 		// Contained in pnlMainRow1
 		btnDisplay = new JButton("Display");
-		btnDisplay.setPreferredSize(new Dimension(80,20));
+		btnDisplay.setPreferredSize(new Dimension(100,20));
 		btnDisplay.addActionListener(this);
 		btnDisplay.setActionCommand(DISPLAY);
 		btnDisplay.setMnemonic(KeyEvent.VK_D);
@@ -417,6 +432,7 @@ class Area51UI extends JFrame implements ActionListener{
 			TreePath selectedPath = fileTree.tree.getSelectionPath();
         	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
         	File selectedFile = (File)node.getUserObject();
+        	System.out.println(selectedFile.toString());
       
         	
         	// MUST make sure file tree model matches files on disk
@@ -428,7 +444,7 @@ class Area51UI extends JFrame implements ActionListener{
         		selectedPath = selectedPath.getParentPath();
         		node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
         		selectedFile = (File)node.getUserObject();
-            	
+            	System.out.println(selectedFile.toString());
             	// If selectedPath is null or still not a directory, just set to users root folder
             	if(selectedFile == null || !(selectedFile.isDirectory()))
             	{

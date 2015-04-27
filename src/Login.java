@@ -15,6 +15,21 @@ import javax.swing.*;
 public class Login {
 	public static void main(String[] args) throws NoSuchAlgorithmException {
 		// Creates new JFrame with size = (300, 150
+		try {
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		new LoginUI("User Login and Registration", 355, 175);
 	}
 }
