@@ -13,18 +13,8 @@ import java.awt.event.*;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
 
 import java.security.Key;
 
@@ -40,6 +30,8 @@ public class TestAES{
  *	@author Wong Yat Seng
  */
 class Area51UI extends JFrame implements ActionListener{
+
+	private static final long serialVersionUID = 1L;
 
 	//declare form UI controls
 	private JTextField txtSearch;		// Field for user to input a file name (this will need to change to implement the file content checking)
@@ -723,12 +715,9 @@ class Area51UI extends JFrame implements ActionListener{
 	    	String username = registerUsernameText.getText();
 			char[] password = registerPasswordText.getPassword();
 			// Instantiate SHA-256 hash digest obj
-			try {
-				digest = MessageDigest.getInstance("SHA-256");
-			} catch (NoSuchAlgorithmException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}
+			
+			digest.reset();
+			
 			for(int i = 0; i < password.length; i++)
 			{
 				digest.update((byte)password[i]);
@@ -792,12 +781,10 @@ class Area51UI extends JFrame implements ActionListener{
 			//open file and read data
 			byte data[] = readByteFile(file);
 			// Instantiate SHA-256 hash digest obj
-			try {
-				digest = MessageDigest.getInstance("SHA-256");
-			} catch (NoSuchAlgorithmException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}			for(int i = 0; i < data.length; i++)
+			
+			digest.reset();
+			
+			for(int i = 0; i < data.length; i++)
 			{
 				digest.update(data[i]);
 			}
