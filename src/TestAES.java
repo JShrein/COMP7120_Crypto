@@ -46,7 +46,7 @@ class Area51UI extends JFrame implements ActionListener{
     private final String CLEAR_COMMAND = "clear";
 
 	//declare form UI controls
-	private JTextField txtCheck;		// Field for user to input a file name (this will need to change to implement the file content checking)
+	private JTextField txtSearch;		// Field for user to input a file name (this will need to change to implement the file content checking)
 	
 	//private JList<File> fileList;		// List of all a user's files
 	private DefaultListModel<File> fileListModel;	// List model provides functionality to the file list
@@ -60,8 +60,8 @@ class Area51UI extends JFrame implements ActionListener{
 					btnDisplay,			// Decrypt and display file contents
 					btnLogout,			// Logout user and launch login GUI
                     btnDelete,			// Delete selected file
-					btnList,			// List user's files
-					btnCheck,			// Check contents of file against stored files
+					btnCheck,			// List user's files
+					btnSearch,			// Check contents of file against stored files
 					btnReg;				// Register new user
 
 	private JScrollPane listScrollPane;		// Container for file list, enables scrolling
@@ -147,19 +147,19 @@ class Area51UI extends JFrame implements ActionListener{
 		}
 		
 		// Field for user input of file for content checking
-		txtCheck = new JTextField(defaultCheckMessage,30);
-		txtCheck.setForeground(Color.gray);
-		txtCheck.addFocusListener(new FocusListener() {
+		txtSearch = new JTextField(defaultCheckMessage,30);
+		txtSearch.setForeground(Color.gray);
+		txtSearch.addFocusListener(new FocusListener() {
 			
 			// Define what actions to take if field is selected
 			@Override
 			public void focusGained(FocusEvent e) {
 				
-				txtCheck.setForeground(Color.black);
+				txtSearch.setForeground(Color.black);
 				
 				// If selected and text == default message, clear text (Will not erase partial input)
-				if(txtCheck.getText().equals(defaultCheckMessage)) {
-					txtCheck.setText("");					
+				if(txtSearch.getText().equals(defaultCheckMessage)) {
+					txtSearch.setText("");					
 				}
 			}
 
@@ -168,10 +168,10 @@ class Area51UI extends JFrame implements ActionListener{
 			@Override
 			public void focusLost(FocusEvent e) {
 				// If de-selected and field is empty, reset to default message
-				if(txtCheck.getText().length() == 0)
+				if(txtSearch.getText().length() == 0)
 				{
-					txtCheck.setText(defaultCheckMessage);
-					txtCheck.setForeground(Color.gray);
+					txtSearch.setText(defaultCheckMessage);
+					txtSearch.setForeground(Color.gray);
 				}
 			}
 		});
@@ -211,18 +211,18 @@ class Area51UI extends JFrame implements ActionListener{
 		// ITEM: List Button
 		// PURPOSE: Displays a list of user's files
 		// Contained in pnlMain
-		btnList = new JButton("List");
-		btnList.setPreferredSize(new Dimension(80,20));
-		btnList.addActionListener(this);
-		btnList.setMnemonic(KeyEvent.VK_L);
+		btnCheck = new JButton("Check");
+		btnCheck.setPreferredSize(new Dimension(80,20));
+		btnCheck.addActionListener(this);
+		btnCheck.setMnemonic(KeyEvent.VK_L);
 		
 		// ITEM: Check Button
 		// PURPOSE: Extracts file from associated text field and checks contents against stored files 
 		// Contained in pnlMain
-		btnCheck = new JButton("Check");
-		btnCheck.setPreferredSize(new Dimension(80,20));
-		btnCheck.addActionListener(this);
-		btnCheck.setMnemonic(KeyEvent.VK_C);
+		btnSearch = new JButton("Search");
+		btnSearch.setPreferredSize(new Dimension(80,20));
+		btnSearch.addActionListener(this);
+		btnSearch.setMnemonic(KeyEvent.VK_C);
 		
 		// Configure Delete button for removing encrypted files (and their key)
 		// Contained in pnlMainRow2
@@ -242,7 +242,7 @@ class Area51UI extends JFrame implements ActionListener{
 		pnlMainRow1.setPreferredSize(new Dimension(300,25));
 		pnlMainRow1.setBackground(new Color(0,0,0,0));
 		pnlMainRow1.add(btnAdd);
-		pnlMainRow1.add(btnList);
+		pnlMainRow1.add(btnCheck);
 		pnlMainRow1.add(btnDisplay);
 		
 		// ITEM: Main Panel Row 2
@@ -256,8 +256,8 @@ class Area51UI extends JFrame implements ActionListener{
 		pnlCheck = new JPanel(new BorderLayout());
 		pnlCheck.setPreferredSize(new Dimension(300,25));
 		pnlCheck.setBackground(new Color(0,0,0,0));
-		pnlCheck.add(txtCheck, "Center");
-		pnlCheck.add(btnCheck, "East");
+		pnlCheck.add(txtSearch, "Center");
+		pnlCheck.add(btnSearch, "East");
 		
 		// ITEM: Scroll pane container
 		// PURPOSE: Contains other JComponents to allow vertical and horizontal scrolling
@@ -602,11 +602,11 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: Check the contents of the input file against stored files
 		// NOTES: 
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if (btn == btnCheck) {
+		if (btn == btnSearch) {
 			
-			String filename = txtCheck.getText();
+			String filename = txtSearch.getText();
 			System.out.println(filename);
-			txtCheck.setText("");
+			txtSearch.setText("");
 			File userFolder = new File(userPath);
 			ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
 			
@@ -615,8 +615,8 @@ class Area51UI extends JFrame implements ActionListener{
 			// USE fileListModel.clear(); to clear new list
 			
 			// Set text box back to default message
-			txtCheck.setText("You can search for a file here");
-			txtCheck.setForeground(Color.gray);
+			txtSearch.setText("You can search for a file here");
+			txtSearch.setForeground(Color.gray);
 			
 			for(int i = 0; i < files.size(); i++)
 			{
@@ -690,8 +690,63 @@ class Area51UI extends JFrame implements ActionListener{
 		// PURPOSE: List all of the files in the users home folder
 		// NOTES: List sub-folders also, which can be expanded, listing those files, etc.,
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		if(btn == btnList) {
+		if(btn == btnCheck) {
 			
+			boolean isSame = false;
+			
+			// Get the file to check
+			String desktop = System.getProperty("user.home") + "/Desktop";
+			File file = getFileDialogOpen("*.*", desktop);
+			System.out.println(desktop);
+						
+			if (file==null)	
+				return;
+												
+			// Update file tree
+			TreePath selectedPath = fileTree.tree.getSelectionPath();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+			File selectedFilePath = (File)node.getUserObject();			
+			
+			//open file and read data
+			//File file = new File(txtEncFile.getText());
+			byte data[] = readByteFile(selectedFilePath); 
+			for(int i = 0; i < data.length; i++)
+			{
+				digest.update(data[i]);
+			}
+			
+			byte[] dataHashBytes = digest.digest();
+			String dataHash = toHashString(dataHashBytes);
+			
+			try {
+				RandomAccessFile checkFile = new RandomAccessFile("keyfile.txt", "rw");
+				
+				while ((checkFile.getFilePointer()) != (checkFile.length())) {
+					String storedFileHash = checkFile.readLine();
+					String hash[] = storedFileHash.split(":");
+					if (hash[0].equals(dataHash)) {
+						isSame = true;
+						break;
+					}
+				}
+				checkFile.close();
+			} catch (FileNotFoundException e0) {
+				System.out.println("ERROR: File not found.");
+				e0.printStackTrace();
+			} catch (IOException e1) {
+				System.out.println("ERROR: Unable to access file");
+				e1.printStackTrace();
+			}
+			
+			
+			if (isSame == true) {
+				JOptionPane.showMessageDialog(null, "There is a file that exists in the system with the same content!");
+
+			} else {
+				JOptionPane.showMessageDialog(null, "No file exists in the system with the same content!");
+
+			}
+			/*
 			//clear output text
 			//list.setText(null);
 			fileListModel.clear();
@@ -709,6 +764,7 @@ class Area51UI extends JFrame implements ActionListener{
 					fileListModel.addElement(currentFile);
 				}
 			}
+			*/
 		}
 		
 		
