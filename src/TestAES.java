@@ -390,6 +390,10 @@ class Area51UI extends JFrame implements ActionListener{
             	{
             		selectedFilePath = new File(userPath);
             	}
+        	} else {
+        		// Set path to path's parent (should be folder or null if root path)
+        		node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
+            	selectedFilePath = (File)node.getUserObject();
         	}
         	System.out.println(selectedFilePath);
         	System.out.println(selectedFilePath.getName());
