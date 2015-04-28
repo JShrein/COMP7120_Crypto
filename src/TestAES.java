@@ -1,8 +1,13 @@
 /**
  *
- * @author Marc
- * @author John
- * @author Mo
+ * @author Marc Badrian
+ * @author John Shrein
+ * @author Mohammad Shamim
+ * 
+ * COMP 7120 - Final Project
+ * Area 51 - A Secure File Management System
+ * Due: 4-28-2015
+ * 
  */
 
 import java.io.*;
@@ -24,26 +29,18 @@ public class TestAES{
 		try {
 			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (UnsupportedLookAndFeelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		new Area51UI("default").start();
 	}	
 }
  
-/**
- *	User Interface for AES File Encryption/Decryption
- *	@author Wong Yat Seng
- */
 class Area51UI extends JFrame implements ActionListener{
 	
 	private static final long serialVersionUID = 1L;
@@ -172,7 +169,7 @@ class Area51UI extends JFrame implements ActionListener{
 			}
 
 			// Define what actions to take if filed is de-selected
-			// ***NOTE*** Must be careful because changes here may preceed desired changes
+			// ***NOTE*** Must be careful because changes here may precede desired changes
 			@Override
 			public void focusLost(FocusEvent e) {
 				// If de-selected and field is empty, reset to default message
@@ -332,7 +329,7 @@ class Area51UI extends JFrame implements ActionListener{
 		pnlReg.add(btnReg);
 		
         // ITEM: Main tab pane
-		// CONTAINS: All panels (Main, ?Register?, About)
+		// CONTAINS: All panels (Main, Register, About)
 		tab = new JTabbedPane();
 		tab.setPreferredSize(new Dimension(310,150));
 		tab.add("Main",pnlMain);
@@ -376,17 +373,7 @@ class Area51UI extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e){
 		
 		String actionCommand = e.getActionCommand();
-		
-		JButton btn = null;
-		JMenuItem mItem = null;
-		if(e.getSource() instanceof JButton)
-		{
-			btn = (JButton)e.getSource();
-		}
-		if(e.getSource() instanceof JMenuItem)
-		{
-			mItem = (JMenuItem)e.getSource();
-		}
+
 		
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		// PURPOSE: Add a file into the system. 
@@ -394,7 +381,6 @@ class Area51UI extends JFrame implements ActionListener{
 		// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		if (actionCommand.equals(ADD_FOLDER)){
 			
-			TreePath selectedPath = fileTree.tree.getSelectionPath();
 			File selectedFile = extractSelectedFileFromTree();
 			
 			if(selectedFile.isDirectory())
@@ -435,7 +421,6 @@ class Area51UI extends JFrame implements ActionListener{
         	node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
 
 			} catch (NullPointerException k) {
-        	//if (selectedPath.equals(null)) {
         		System.out.println("it's null");
     			selectedPath = fileTree.tree.getSelectionPath();
     			node = fileTree.rootNode;
@@ -479,13 +464,13 @@ class Area51UI extends JFrame implements ActionListener{
 				}
 				
 				byte[] fileDigestBytes = digest.digest();
-				String fileDigest = toHashString(fileDigestBytes);
+				String fileDigest = toHexString(fileDigestBytes);
 				
 				//encrypt and save as new data and key as new files						
 				data = AES.encrypt(data);
 				Key key = AES.getKey();
 				
-				System.out.println(toHashString(key.getEncoded()));
+				System.out.println(toHexString(key.getEncoded()));
 				digest.reset();
 				
 				for(int i = 0; i < data.length; i++)
@@ -494,10 +479,10 @@ class Area51UI extends JFrame implements ActionListener{
 				}
 				
 				byte[] encFileDigestBytes = digest.digest();
-				String encFileDigest = toHashString(encFileDigestBytes);
+				String encFileDigest = toHexString(encFileDigestBytes);
 				
 				byte[] keyBytes = key.getEncoded();
-				String keyHexString = toHashString(keyBytes);
+				String keyHexString = toHexString(keyBytes);
 				
 				String hashAndKey = fileDigest + ":" + encFileDigest + ":" + keyHexString + "\n";
 				
@@ -539,9 +524,6 @@ class Area51UI extends JFrame implements ActionListener{
 		if (actionCommand.equals(DELETE_FILE)) {
 			
 			// Get the selected file from the tree model
-			/*TreePath selectedPath = fileTree.tree.getSelectionPath();
-        	DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-        	File selectedFile = (File)node.getUserObject();*/
 			File selectedFile = extractSelectedFileFromTree();
         	
         	// Don't try to delete unless we're sure it exists
@@ -628,7 +610,7 @@ class Area51UI extends JFrame implements ActionListener{
 				digest.update(encryptedFileBytes[i]);
 			}
 			
-			String encryptedFileHash = toHashString(digest.digest());
+			String encryptedFileHash = toHexString(digest.digest());
 			
 			try {
 				RandomAccessFile keyFile = new RandomAccessFile("keyfile.txt", "rw");
@@ -700,11 +682,10 @@ class Area51UI extends JFrame implements ActionListener{
 			String filename = txtSearch.getText();
 			System.out.println(filename);
 			txtSearch.setText("");
-			//File userFolder = new File(userPath);
-			//ArrayList<String> files = new ArrayList<String>(Arrays.asList(userFolder.list()));
 
         	DefaultMutableTreeNode node = fileTree.rootNode;
-        	Enumeration<DefaultMutableTreeNode> filesInTree = node.breadthFirstEnumeration();
+        	@SuppressWarnings("unchecked")
+			Enumeration<DefaultMutableTreeNode> filesInTree = node.breadthFirstEnumeration();
 			
         	
 			// Set text box back to default message
@@ -715,14 +696,12 @@ class Area51UI extends JFrame implements ActionListener{
 			
 			while(filesInTree.hasMoreElements())
 			{
-				//String currentFile = files.get(i);
 				DefaultMutableTreeNode currentNode = filesInTree.nextElement();
 				File currentFile = (File)currentNode.getUserObject();
 				if(currentFile.getName().equals(filename))
 				{	
 					JOptionPane.showMessageDialog(null, "This file is in the system");
 					foundFile = true;
-					//fileTree.tree.setSelectionPath(currentNode.getParent());
 					break;
 				}
 			}
@@ -748,7 +727,7 @@ class Area51UI extends JFrame implements ActionListener{
 			}
 			
 			byte[] passwordHashBytes = digest.digest();
-			String newPasswordHash = toHashString(passwordHashBytes);
+			String newPasswordHash = toHexString(passwordHashBytes);
 			String credentials = username + ':' + newPasswordHash + "\n";
 
 			
@@ -812,7 +791,7 @@ class Area51UI extends JFrame implements ActionListener{
 			}
 			
 			byte[] dataHashBytes = digest.digest();
-			String dataHash = toHashString(dataHashBytes);
+			String dataHash = toHexString(dataHashBytes);
 			System.out.println(dataHash);
 			
 			String filepath = file.getName();
@@ -828,7 +807,7 @@ class Area51UI extends JFrame implements ActionListener{
 					}
 					
 					byte[] foundBytes = digest.digest();
-					String foundHash = toHashString(foundBytes);
+					String foundHash = toHexString(foundBytes);
 					System.out.println(foundHash);
 					
 					try {
@@ -854,28 +833,6 @@ class Area51UI extends JFrame implements ActionListener{
 					}
 				}
 			}
-		/*	
-			try {
-				RandomAccessFile checkFile = new RandomAccessFile("keyfile.txt", "rw");
-				
-				while ((checkFile.getFilePointer()) != (checkFile.length())) {
-					String storedFileHash = checkFile.readLine();
-					String hash[] = storedFileHash.split(":");
-					System.out.println(hash[0]);
-					if (hash[0].equals(dataHash)) {
-						isSame = true;
-						break;
-					}
-				}
-				checkFile.close();
-			} catch (FileNotFoundException e0) {
-				System.out.println("ERROR: File not found.");
-				e0.printStackTrace();
-			} catch (IOException e1) {
-				System.out.println("ERROR: Unable to access file");
-				e1.printStackTrace();
-			}
-			*/
 			
 			if (isSame == true) {
 				JOptionPane.showMessageDialog(null, "There is a file that exists in the system with the same content!");
@@ -905,7 +862,6 @@ class Area51UI extends JFrame implements ActionListener{
     	
         DefaultMutableTreeNode parent = null;
  
-        // root is users home folder (e.g. "./users/username/")
         File root = userPathFile;
         addFiles(parent, root);
     }
@@ -1127,7 +1083,7 @@ class Area51UI extends JFrame implements ActionListener{
 	 *	@param data The bytes to be encrypted
 	 *	@return A hexadecimal representation of the data
 	 */
-	protected String toHashString(byte[] data)
+	protected String toHexString(byte[] data)
 	{
 		StringBuffer sb = new StringBuffer();
 		
@@ -1191,33 +1147,27 @@ class Area51UI extends JFrame implements ActionListener{
 
 		        int row = fileTree.tree.getClosestRowForLocation(event.getX(), event.getY());
 		        fileTree.tree.setSelectionRow(row);
-		        contextMenu.show(event.getComponent(), event.getX(), event.getY());
-		        
-		        
+		        contextMenu.show(event.getComponent(), event.getX(), event.getY()); 
 		    }
 		}
 
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
 			
 		}
 	}

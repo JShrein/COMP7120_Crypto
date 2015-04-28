@@ -1,9 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-//package Encryptor;
 
 /**
  *
@@ -58,8 +52,6 @@ public class AES{
 	 */
 	public byte[] decrypt(byte[] data, Key key){
 		try{
-			//Security.addProvider(new com.sun.crypto.provider.SunJCE());
-			KeyGenerator kg = KeyGenerator.getInstance("AES");
 			Cipher cipher = Cipher.getInstance("AES");
 
 			cipher.init(Cipher.DECRYPT_MODE, key);

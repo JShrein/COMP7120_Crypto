@@ -1,3 +1,15 @@
+/**
+ *
+ * @author Marc Badrian
+ * @author John Shrein
+ * @author Mohammad Shamim
+ * 
+ * COMP 7120 - Final Project
+ * Area 51 - A Secure File Management System
+ * Due: 4-28-2015
+ * 
+ */
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -18,16 +30,12 @@ public class Login {
 		try {
 			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (UnsupportedLookAndFeelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		new LoginUI("User Login and Registration", 355, 175);
@@ -157,7 +165,7 @@ class LoginUI extends JFrame {
 				
 				byte[] passwordHashBytes = digest.digest();
 				
-				String passwordHashString = toHashString(passwordHashBytes);
+				String passwordHashString = toHexString(passwordHashBytes);
 				
 				String credentials = username + ':' + passwordHashString;
 				
@@ -206,7 +214,12 @@ class LoginUI extends JFrame {
 		});
 	}
 	
-	private String toHashString(byte[] characters)
+	/**
+	 * Convert byte array to a hexadecimal string
+	 * @param characters
+	 * @return Hex string representation of input
+	 */
+	private String toHexString(byte[] characters)
 	{
 		StringBuffer sb = new StringBuffer();
 		
@@ -220,6 +233,11 @@ class LoginUI extends JFrame {
 		return sb.toString();
 	}
 	
+	/**
+	 * Hides window after user logs in
+	 * @param void
+	 * @return void
+	 */
 	public void hideWindow()
 	{
 		this.setVisible(false);

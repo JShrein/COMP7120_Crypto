@@ -1,31 +1,38 @@
+/**
+ *
+ * @author Marc Badrian
+ * @author John Shrein
+ * @author Mohammad Shamim
+ * 
+ * COMP 7120 - Final Project
+ * Area 51 - A Secure File Management System
+ * Due: 4-28-2015
+ * 
+ */
 
 import java.awt.Component;
 import java.awt.GridLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.beans.PropertyChangeListener;
 import java.io.File;
-
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JTree;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.RowMapper;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.filechooser.FileView;
 
 public class A51FileTree extends JPanel {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	
 	protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
@@ -45,22 +52,9 @@ public class A51FileTree extends JPanel {
 
 			@Override
 			public void valueChanged(TreeSelectionEvent e) {
-
-				/*TreePath selectedPath = e.getPath();
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode)selectedPath.getLastPathComponent();
-				File selectedFile = (File)node.getUserObject();
-	        	if(selectedFile.isDirectory())
-	        	{
-	        		tree.setEditable(true);
-	        		System.out.println("Tree set to editable");
-	        	}
-	        	else
-	        	{
-	        		tree.setEditable(false);
-	        		System.out.println("Tree set to ineditable");
-	        	}*/
 				
 			}});
+        
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new FileTreeCellRenderer());
         
@@ -159,7 +153,12 @@ public class A51FileTree extends JPanel {
     private static class FileTreeCellRenderer extends DefaultTreeCellRenderer 
     {
 
-        @Override
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		@Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
